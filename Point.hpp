@@ -17,6 +17,7 @@ public:
 
     // Methods
     void insureWithinBounds(Canvas &img);
+    void insureWithinBounds(int width, int height);
 
     // Operators
     bool operator==(const Point &p);

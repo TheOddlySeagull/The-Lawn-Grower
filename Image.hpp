@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <cmath>
 
 #include "Pixel.hpp"
 #include "Point.hpp"
@@ -44,5 +45,16 @@ public:
 
     // Methods
     void exportImage(std::string filename, int width_repititions, int height_repititions);
+    void printImageConsole();
+
+    // Drawing
+    void drawLine(Pixel color, Point p1, Point p2, int thickness);
+    void drawCurve(Pixel color, Point p1, Point p2, int offset);
+
+    //Rotating
+    void rotateImage(double angle);
+
+    // Operators
+    friend std::ostream &operator<<(std::ostream &os, const Image &img);
 
 };

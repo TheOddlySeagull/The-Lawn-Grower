@@ -42,6 +42,21 @@ void Point::insureWithinBounds(Canvas &img)
     }
 }
 
+void Point::insureWithinBounds(int width, int height)
+{
+    this->x = this->x % width;
+    this->y = this->y % height;
+
+    if (this->x < 0)
+    {
+        this->x += width;
+    }
+    if (this->y < 0)
+    {
+        this->y += height;
+    }
+}
+
 //----------------------------------------------------------------------------------------------------
 // Operators
 //----------------------------------------------------------------------------------------------------

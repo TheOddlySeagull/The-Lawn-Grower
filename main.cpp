@@ -76,12 +76,12 @@ void drawPartialEmptyCircle(Canvas& img, int radius, double startAngle, double e
  * with the specified radius, start angle, end angle, position, color, and image object.
  * If negative angles are provided, the circle is divided into two parts and drawn separately.
  *
+ * @param img The Canvas object to draw on.
  * @param radius The radius of the circle in pixels (int).
  * @param startAngle The angle at which the circle starts (degrees).
  * @param endAngle The angle at which the circle ends (degrees).
  * @param position The position of the center of the circle (Point object).
  * @param color The color of the circle (Pixel object).
- * @param img The Canvas object to draw on.
  */
 void drawPartialCheeseWheel(Canvas& img, int radius, double startAngle, double endAngle, Point position, Pixel color) {
     // Value adaptation for this function
@@ -149,34 +149,6 @@ void drawPartialCheeseWheel(Canvas& img, int radius, double startAngle, double e
     }
 }
 
-
-Canvas generatePetalModel(int length, int topWidth, int topCurvature, int pointOffset, Pixel color) {
-    // Generate the image based on the size
-    int imageWidth = (length + pointOffset) * 3;
-    int imageHeight = imageWidth;
-    Canvas petalImage(imageWidth, imageHeight, 1);
-}
-
-/**
- * @brief Draw a filled circle with a border on the image.
- *
- * This function draws a filled circle on the provided image with the specified fill color
- * and a border circle with a different color to create a border effect.
- *
- * @param img The Canvas object to draw on.
- * @param fillColor The color to fill the inner circle (Pixel object).
- * @param borderColor The color to use for the border circle (Pixel object).
- * @param center The center coordinates of the circle (Point object).
- * @param radius The radius of the outer circle, which determines the size of the filled circle and its border.
- */
-void drawFilledCircleWithBorder(Canvas& img, Pixel fillColor, Pixel borderColor, Point center, int radius) {
-    // Draw the filled circle with the fillColor
-    drawCircle(img, fillColor, center, radius);
-
-    // Draw a slightly smaller circle with the borderColor to create the border effect
-    drawCircle(img, borderColor, center, radius - 1);
-}
-
 /**
  * @brief Draw a line on the image with specified line thickness.
  *
@@ -223,6 +195,75 @@ void drawLine(Canvas& img, Pixel color, Point p1, Point p2, int thickness) {
             p1.y += sy;
         }
     }
+}
+
+
+/**
+ * @brief Generate a petal model.
+ * 
+ * @param length The length of the petal
+ * @param topWidth The max width of the petal
+ * @param topCurvature The curvature of the top of the petal
+ * @param pointOffset The offset of the point of the petal from the top curvature
+ * @param color The color of the petal
+ * @return The generated petal model as a Image object
+ */
+Image generatePetalModel(int length, int topWidth, int topCurvature, int pointOffset, double sideCurveFactor, Pixel color) {
+
+    // Generate the image based on the size
+    int imageWidth = (length + pointOffset) * 3;
+    // Turn imageWidth into the highest 100 multiple
+    imageWidth = (imageWidth / 100 + 1) * 100;
+    int imageHeight = imageWidth;
+    Image petalImage(imageWidth, imageHeight);
+
+    // Get the center point
+    Point center(imageWidth / 2, imageHeight / 2);
+
+    Point top(center.x, center.y + length);
+
+    // Get the side points
+    Point sideR(top.x + topWidth / 2, top.y);
+    Point sideL(top.x - topWidth / 2, top.y);
+
+    top.y = top.y + topCurvature/2 + pointOffset;
+
+    std::cout << "center: " << center << ", top: " << top << std::endl;
+
+    //petalImage.drawLine(color, center, top, 0);
+    //petalImage.drawLine(color, sideR, sideL, 0);
+    petalImage.drawCurve(color, sideR, sideL, -topCurvature);
+    petalImage.drawCurve(color, center, sideR, -topWidth * sideCurveFactor);
+    petalImage.drawCurve(color, center, sideL, topWidth * sideCurveFactor);
+    //petalImage.drawCurve(color, top, sideL, -topWidth / 20);
+    //petalImage.drawCurve(color, top, sideR, topWidth / 20);
+
+    // flood fill center of the petal (between center and top)
+    Point centerTop((center.x + top.x) / 2, (center.y + top.y) / 2);
+    petalImage.floodNoRepPixel(color, centerTop);
+
+
+    return petalImage;
+}
+
+/**
+ * @brief Draw a filled circle with a border on the image.
+ *
+ * This function draws a filled circle on the provided image with the specified fill color
+ * and a border circle with a different color to create a border effect.
+ *
+ * @param img The Canvas object to draw on.
+ * @param fillColor The color to fill the inner circle (Pixel object).
+ * @param borderColor The color to use for the border circle (Pixel object).
+ * @param center The center coordinates of the circle (Point object).
+ * @param radius The radius of the outer circle, which determines the size of the filled circle and its border.
+ */
+void drawFilledCircleWithBorder(Canvas& img, Pixel fillColor, Pixel borderColor, Point center, int radius) {
+    // Draw the filled circle with the fillColor
+    drawCircle(img, fillColor, center, radius);
+
+    // Draw a slightly smaller circle with the borderColor to create the border effect
+    drawCircle(img, borderColor, center, radius - 1);
 }
 
 /**
@@ -457,7 +498,7 @@ int main()
     srand(time(NULL));
 
     // Create an image with scale
-    Canvas img(4000, 2000, 1000);
+    Canvas img(4000, 4000, 2000);
 
     if (img.getScale() < 160)
     {
@@ -528,8 +569,8 @@ int main()
     //----------------------------------------------------------------------------------
     // Testing
     //----------------------------------------------------------------------------------
-
-    Canvas test(1000, 1000, 1000);
+    
+    Canvas test(100, 100, 100);
     Image test_image(100, 100);
 
     Point pixelPos;
@@ -547,37 +588,25 @@ int main()
         }
     }
 
-    test_image.floodRepPixel(Pixel(0, 255, 0), Point(10, 10));
-    test_image.floodRepPixel(Pixel(0, 0, 255), Point(42, 42));
+    /*test_image.floodRepPixel(Pixel(0, 255, 0), Point(10, 10));
+    test_image.floodRepPixel(Pixel(0, 0, 255), Point(42, 42));*/
 
-    drawPartialEmptyCircle(test, 100, 0, 180, Point(500, 500), Pixel(255, 0, 0));
+    //drawPartialEmptyCircle(test, 100, 0, 180, Point(500, 500), Pixel(255, 0, 0));
 
+    Image image=generatePetalModel(120, 60, 40, 2, 0.5, Pixel(255, 0, 0));
+    Image image2=generatePetalModel(100, 40, 30, 2, 0.5, Pixel(0, 255, 0));
+    std::cout << "Generated petal models: " << image << ", " << image2 << std::endl;
 
-    /*
-    // Print out the image
-    for (int j = 0; j < img.getWidth(); j++)
-    {
-        for (int i = 0; i < img.getHeight(); i++)
-        {
-            try
-            {
-                // Draw the O character in the color of the pixel
-                std::cout << "\033[48;2;" << img.getPixel(i, j).getRed() << ";" << img.getPixel(i, j).getGreen() << ";" << img.getPixel(i, j).getBlue() << "m  \033[0m";
-            }
-            catch (const std::exception& e)
-            {
-                std::cerr << e.what() << '\n';
-            }
-        }
-        std::cout << std::endl;
-    }
-    */
-
+    //Rotating
+    //image.rotateImage(45);
+    
     std::cout << "Exporting images" << std::endl;
 
     img.exportImage("output.bmp", 1, 1);
-    test.exportImage("test.bmp", 1, 1);
-    test_image.exportImage("test_image.bmp", 1, 1);
+    image.exportImage("petal.bmp", 1, 1);
+    image2.exportImage("petal2.bmp", 1, 1);
+    //test.exportImage("test.bmp", 1, 1);
+    //test_image.exportImage("floodfilltest.bmp", 1, 1);
 
     return 0;
 }
