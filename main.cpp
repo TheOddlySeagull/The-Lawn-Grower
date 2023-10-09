@@ -515,12 +515,12 @@ int main()
     std::cout << "Step: " << step_pixel << std::endl;
 
     TextureZone poppy_zone(Point(0, 0), Point(img.getWidth(), img.getHeight()));
-    TextureZone grass_zone(Point(0, 0), Point(img.getWidth(), img.getHeight()));
+    //TextureZone grass_zone(Point(0, 0), Point(img.getWidth(), img.getHeight()));
 
     //----------------------------------------------------------------------------------
     // Grass
     //----------------------------------------------------------------------------------
-
+    /*
     drawFlatGrass(img, grass_zone, Pixel(0, 200, 0), 0.20, 0.5, 1.0);
     drawFlatGrass(img, grass_zone, Pixel(0, 200, 0), 0.50, 0.7, 0.4);
     drawFlatGrass(img, grass_zone, Pixel(0, 200, 0), 0.75, 1.0, 0.2);
@@ -549,6 +549,7 @@ int main()
     }
 
     drawFlatGrass(img, grass_zone, Pixel(0, 200, 0), 0.75, 1.0, 0.05);
+    */
 
     //----------------------------------------------------------------------------------
     // Roses
@@ -569,44 +570,74 @@ int main()
     //----------------------------------------------------------------------------------
     // Testing
     //----------------------------------------------------------------------------------
-    
-    Canvas test(100, 100, 100);
-    Image test_image(100, 100);
 
-    Point pixelPos;
-    // Draw a 50 by 50 empty square on the image
-    for (int x = -10; x < 40; x++)
-    {
-        for (int y = -10; y < 40; y++)
-        {
-            pixelPos.x = x;
-            pixelPos.y = y;
-            if (x == -10 || x == 39 || y == -10 || y == 39)
-            {
-                test_image.setRepPixel(Pixel(255, 0, 0), pixelPos);
-            }
-        }
+    Pixel petal_color_1 = getRandomFlowerColor();
+    Pixel petal_color_2 = getRandomFlowerColorExcept(getFlowerColor(petal_color_1));
+    Pixel petal_color_3 = getRandomFlowerColorExcept(getFlowerColor(petal_color_2));
+
+    //Image petal_1=generatePetalModel(120, 60, 40, 2, 0.5, petal_color_1);
+    //Image petal_2=generatePetalModel(100, 40, 30, 2, 0.5, petal_color_2);
+    //Image petal_3=generatePetalModel(80, 20, 20, 2, 0.5, petal_color_3);
+
+    // petal_1, 2, 3 but with random values
+    Image petal_1=generatePetalModel(100 + rand() % 100, 40 + rand() % 40, 30 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, getRandomFlowerColor());
+    Image petal_2=generatePetalModel(80 + rand() % 100, 20 + rand() % 40, 20 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, getRandomFlowerColor());
+    Image petal_3=generatePetalModel(60 + rand() % 100, 10 + rand() % 40, 10 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, getRandomFlowerColor());
+
+
+    std::cout << "Generated petal models: " << petal_1 << ", " << petal_2 << ", " << petal_3 << std::endl;
+
+    Image final_image = petal_1.clone();
+
+    int petal_count = 5 + rand() % 10;
+    std::cout << "Petal count: " << petal_count << std::endl;
+
+    petal_3.rotate(360 / petal_count / 2);
+
+    for (int i = 0; i < petal_count; i++) {
+
+        //Rotating
+        //std::cout << "Rotating images" << std::endl;
+        petal_1.rotate(360 / petal_count);
+        petal_2.rotate(360 / petal_count);
+
+        //Trim
+        //std::cout << "Trimming images" << std::endl;
+        petal_1.trim(final_image.getWidth(), final_image.getHeight());
+        petal_2.trim(final_image.getWidth(), final_image.getHeight());
+
+        //Darkening
+        //std::cout << "Darkening images" << std::endl;
+        //petal_1.darken(0.9);
+        //petal_2.darken(0.9);
+
+        //Merging
+        //std::cout << "Merging images" << std::endl;
+        final_image.merge(petal_1);
+        final_image.merge(petal_2);
+    
     }
 
-    /*test_image.floodRepPixel(Pixel(0, 255, 0), Point(10, 10));
-    test_image.floodRepPixel(Pixel(0, 0, 255), Point(42, 42));*/
+    for (int i = 0; i < petal_count; i++) {
+        petal_3.rotate(360 / petal_count);
+        petal_3.trim(final_image.getWidth(), final_image.getHeight());
+        final_image.merge(petal_3);
+    }
 
-    //drawPartialEmptyCircle(test, 100, 0, 180, Point(500, 500), Pixel(255, 0, 0));
+    // Add circle at the center
+    //std::cout << "Adding circle" << std::endl;
+    //final_image.drawCircle(getRandomFlowerColor(), Point(final_image.getWidth() / 2, final_image.getHeight() / 2), 50);
 
-    Image image=generatePetalModel(120, 60, 40, 2, 0.5, Pixel(255, 0, 0));
-    Image image2=generatePetalModel(100, 40, 30, 2, 0.5, Pixel(0, 255, 0));
-    std::cout << "Generated petal models: " << image << ", " << image2 << std::endl;
+    // Add noise
+    //std::cout << "Adding noise" << std::endl;
+    final_image.addNoise(1, 10, 1, 255);
 
-    //Rotating
-    //image.rotateImage(45);
-    
     std::cout << "Exporting images" << std::endl;
 
-    img.exportImage("output.bmp", 1, 1);
-    image.exportImage("petal.bmp", 1, 1);
-    image2.exportImage("petal2.bmp", 1, 1);
-    //test.exportImage("test.bmp", 1, 1);
-    //test_image.exportImage("floodfilltest.bmp", 1, 1);
+    final_image.exportImage("petal_cloned.bmp", 1, 1);
+    petal_1.exportImage("petal_rotated.bmp", 1, 1);
+
+    std::cout << "Done" << std::endl;
 
     return 0;
 }

@@ -1,4 +1,5 @@
 #include "Image.hpp"
+#include <cmath> // for trigonometric functions
 
 
 
@@ -20,11 +21,11 @@ Point Image::makePointRep(Point pos)
 void Image::floodRepPixelHelper(Pixel filler, Pixel replaced, Point pos, std::vector<Point> &visited)
 {
     pos.insureWithinBounds(width, height);
-    std::cout << "floodRepPixelHelper pos: " << pos << std::endl;
+    //std::cout << "floodRepPixelHelper pos: " << pos << std::endl;
     // If current point is not in visited
     for (int i = 0; i < visited.size(); i++) {
         if (visited[i] == pos) {
-            std::cout << "visited" << std::endl;
+            //std::cout << "visited" << std::endl;
             return;
         }
     }
@@ -83,7 +84,7 @@ Pixel *Image::getPixels()
     return pixels;
 }
 
-Pixel Image::getPixel(Point pos)
+Pixel Image::getPixel(Point pos) const
 {
     return pixels[pos.y * width + pos.x];
 }
@@ -232,6 +233,10 @@ void Image::floodNoRepPixel(Pixel filler, Point pos)
 }
 
 void Image::exportImage(std::string filename, int width_repititions, int height_repititions) {
+    // Calculate the new width and height based on repetitions
+    int newWidth = width * width_repititions;
+    int newHeight = height * height_repititions;
+
     // Open the output file for writing
     std::ofstream outputFile(filename, std::ios::binary);
 
@@ -239,10 +244,6 @@ void Image::exportImage(std::string filename, int width_repititions, int height_
         std::cerr << "Error: Could not open file " << filename << " for writing." << std::endl;
         return;
     }
-
-    // Calculate the new width and height based on repetitions
-    int newWidth = width * width_repititions;
-    int newHeight = height * height_repititions;
 
     // Calculate the file size
     int fileSize = 54 + (3 * newWidth * newHeight);
@@ -269,16 +270,32 @@ void Image::exportImage(std::string filename, int width_repititions, int height_
     // Write the BMP header to the output file
     outputFile.write(header, 54);
 
+    // Calculate the padding size (each row must be a multiple of 4 bytes)
+    int paddingSize = (4 - (newWidth * 3) % 4) % 4;
+
+    // Create an array to store the padding bytes (if needed)
+    char padding[4] = {0, 0, 0, 0};
+
     // Loop to write the image data, repeating it width_repititions times
     for (int h_rep = 0; h_rep < height_repititions; h_rep++) {
         for (int h = height - 1; h > -1; h--) {
             for (int w_rep = 0; w_rep < width_repititions; w_rep++) {
-                for (int w = 0; w < width; w++) {
-                    Pixel& pixel = pixels[h * width+1 + w];
+                for (int w = 0; w < newWidth; w++) {
+                    // Calculate the corresponding pixel position in the original image
+                    int srcX = w / width_repititions;
+                    int srcY = h / height_repititions;
+
+                    Pixel &pixel = pixels[srcY * width + srcX];
+
                     // Write the pixel color data (BGR order for BMP)
                     outputFile.put(pixel.getBlue());
                     outputFile.put(pixel.getGreen());
                     outputFile.put(pixel.getRed());
+                }
+
+                // Write padding bytes (if needed)
+                if (paddingSize > 0) {
+                    outputFile.write(padding, paddingSize);
                 }
             }
         }
@@ -305,6 +322,73 @@ void Image::printImageConsole()
             }
         }
         std::cout << std::endl;
+    }
+}
+
+Image Image::clone() const {
+    Image clonedImage(width, height);
+
+    // Iterate through the pixels of the current image and copy them to the cloned image
+    for (int w = 0; w < width; w++) {
+        for (int h = 0; h < height; h++) {
+            Point pos(w, h);
+            Pixel pixel = getPixel(pos);
+            clonedImage.setRepPixel(pixel, pos);
+        }
+    }
+
+    return clonedImage;
+}
+
+// Color and noise
+void Image::darken(float amount) {
+    // Iterate through the pixels of the current image
+    for (int w = 0; w < width; w++) {
+        for (int h = 0; h < height; h++) {
+            Point pos(w, h);
+            Pixel pixel = getPixel(pos);
+
+            // Calculate the new color components
+            int newRed = static_cast<int>(pixel.getRed() * amount);
+            int newGreen = static_cast<int>(pixel.getGreen() * amount);
+            int newBlue = static_cast<int>(pixel.getBlue() * amount);
+
+            // Update the pixel color
+            setRepPixel(Pixel(newRed, newGreen, newBlue), pos);
+        }
+    }
+}
+
+void Image::addNoise(double noiseDensity, int noiseSpread, int noiseColorfulness, int noiseSaturation) {
+    
+    // Initialize the random number generator
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0, 1);
+
+
+    for (int x = 0; x < width; x++) {
+        for (int y = 0; y < height; y++) {
+            Pixel& pixel = pixels[y * width + x];
+            if (pixel.getRed() + pixel.getGreen() + pixel.getBlue() > 0 && dis(gen) < noiseDensity) {
+
+                // Random value between -noiseSpread and +noiseSpread
+                int radius = rand() % (2 * noiseSpread) - noiseSpread;
+
+                int noiseR = pixel.getRed() + radius + (rand() % (2 * noiseColorfulness) - noiseColorfulness);
+                int noiseG = pixel.getGreen() + radius + (rand() % (2 * noiseColorfulness) - noiseColorfulness);
+                int noiseB = pixel.getBlue() + radius + (rand() % (2 * noiseColorfulness) - noiseColorfulness);
+
+                // Ensure that the noise values do not exceed the specified saturation
+                noiseR = std::min(std::max(noiseR, 0), noiseSaturation);
+                noiseG = std::min(std::max(noiseG, 0), noiseSaturation);
+                noiseB = std::min(std::max(noiseB, 0), noiseSaturation);
+
+                pixel.setRed(noiseR);
+                pixel.setGreen(noiseG);
+                pixel.setBlue(noiseB);
+            }
+        }
     }
 }
 
@@ -383,40 +467,149 @@ void Image::drawCurve(Pixel color, Point p1, Point p2, int offset) {
     }
 }
 
+void Image::drawCircle(Pixel color, Point center, int radius) {
+    int x = radius;
+    int y = 0;
+    int radiusError = 1 - x;
 
-// Rotating
-void Image::rotateImage(double angle)
-{
-    // Calculate the new width and height
-    int newWidth = static_cast<int>(width * cos(angle) + height * sin(angle));
-    int newHeight = static_cast<int>(width * sin(angle) + height * cos(angle));
+    while (x >= y) {
+        // Draw horizontal scanlines
+        for (int i = center.x - x; i <= center.x + x; i++) {
+            setRepPixel(color, Point(i, center.y + y));
+            setRepPixel(color, Point(i, center.y - y));
+        }
 
-    // Create a new array of pixels
-    Pixel *newPixels = new Pixel[newWidth * newHeight];
+        // Draw vertical scanlines
+        for (int i = center.x - y; i <= center.x + y; i++) {
+            setRepPixel(color, Point(i, center.y + x));
+            setRepPixel(color, Point(i, center.y - x));
+        }
 
-    // Loop to rotate the image
-    for (int w = 0; w < newWidth; w++) {
-        for (int h = 0; h < newHeight; h++) {
-            // Calculate the original position of the pixel
-            double x = (w - newWidth / 2) * cos(angle) - (h - newHeight / 2) * sin(angle) + width / 2;
-            double y = (w - newWidth / 2) * sin(angle) + (h - newHeight / 2) * cos(angle) + height / 2;
+        y++;
 
-            // Set the pixel at the new position to the pixel at the original position
-            newPixels[h * newWidth + w] = getPixel(Point(static_cast<int>(x), static_cast<int>(y)));
+        if (radiusError < 0) {
+            radiusError += 2 * y + 1;
+        } else {
+            x--;
+            radiusError += 2 * (y - x) + 1;
+        }
+    }
+}
+
+
+// Rotate
+void Image::rotate(float angleDegrees) {
+    if (angleDegrees == 0) {
+        // No rotation needed
+        return;
+    }
+    // Convert the angle to radians
+    float angleRadians = angleDegrees * 3.14159265 / 180.0;
+
+    // Calculate the dimensions of the rotated image
+    int newWidth = static_cast<int>(abs(width * cos(angleRadians)) + abs(height * sin(angleRadians)));
+    int newHeight = static_cast<int>(abs(width * sin(angleRadians)) + abs(height * cos(angleRadians)));
+
+    // Create a new image buffer for the rotated image and fill it with black pixels
+    Pixel* rotatedPixels = new Pixel[newWidth * newHeight];
+    for (int i = 0; i < newWidth * newHeight; i++) {
+        rotatedPixels[i] = Pixel(0, 0, 0); // Black pixel
+    }
+
+    // Calculate the center point of the original image
+    Point center(static_cast<int>(width / 2), static_cast<int>(height / 2));
+
+    // Iterate over each pixel in the rotated image
+    for (int y = 0; y < newHeight; y++) {
+        for (int x = 0; x < newWidth; x++) {
+            // Calculate the corresponding position in the original image
+            float srcX = static_cast<float>(x - newWidth / 2);
+            float srcY = static_cast<float>(y - newHeight / 2);
+
+            float originalX = center.x + (srcX * cos(-angleRadians) - srcY * sin(-angleRadians));
+            float originalY = center.y + (srcX * sin(-angleRadians) + srcY * cos(-angleRadians));
+
+            // Check if the original coordinates are within bounds
+            if (originalX >= 0 && originalX < width && originalY >= 0 && originalY < height) {
+                // Copy the color from the original image to the rotated image
+                rotatedPixels[y * newWidth + x] = getPixel(Point(static_cast<int>(originalX), static_cast<int>(originalY)));
+            }
         }
     }
 
-    // Delete the old array of pixels
-    delete[] pixels;
-
-    // Assign the new array to pixels
-    pixels = newPixels;
-
-    // Update the width and height
+    // Update the image dimensions and pixel buffer
     width = newWidth;
     height = newHeight;
+    delete[] pixels;
+    pixels = rotatedPixels;
 }
 
+void Image::trim(int newWidth, int newHeight) {
+    if (newWidth <= 0 || newHeight <= 0) {
+        // Invalid dimensions
+        return;
+    }
+
+    // Calculate the offsets to center the image within the new dimensions
+    int xOffset = std::max(0, (width - newWidth) / 2);
+    int yOffset = std::max(0, (height - newHeight) / 2);
+
+    // Create a new image buffer for the trimmed image and fill it with black pixels
+    Pixel* trimmedPixels = new Pixel[newWidth * newHeight];
+    for (int i = 0; i < newWidth * newHeight; i++) {
+        trimmedPixels[i] = Pixel(0, 0, 0); // Black pixel
+    }
+
+    // Calculate the starting point to copy pixels from the original image
+    int startX = std::max(0, -xOffset);
+    int startY = std::max(0, -yOffset);
+
+    // Calculate the ending point to copy pixels from the original image
+    int endX = std::min(newWidth, width - xOffset);
+    int endY = std::min(newHeight, height - yOffset);
+
+    // Copy the relevant portion of the original image to the new buffer
+    for (int y = startY; y < endY; y++) {
+        for (int x = startX; x < endX; x++) {
+            int originalX = x + xOffset;
+            int originalY = y + yOffset;
+
+            // Copy the color from the original image to the trimmed image
+            trimmedPixels[y * newWidth + x] = getPixel(Point(originalX, originalY));
+        }
+    }
+
+    // Update the image dimensions and pixel buffer
+    width = newWidth;
+    height = newHeight;
+    delete[] pixels;
+    pixels = trimmedPixels;
+}
+
+
+// Merging
+void Image::merge(const Image &other) {
+    // Check if the two images have the same dimensions
+    if (width != other.width || height != other.height) {
+        std::cerr << "Error: Images have different dimensions and cannot be merged." << std::endl;
+        std::cout << "width: " << width << " other.width: " << other.width << std::endl;
+        std::cout << "height: " << height << " other.height: " << other.height << std::endl;
+        return;
+    }
+
+    // Iterate through the pixels of the parameter image
+    for (int w = 0; w < width; w++) {
+        for (int h = 0; h < height; h++) {
+            Point pos(w, h);
+            Pixel pixel = other.getPixel(pos);
+
+            // Only merge non-black pixels
+            if (pixel != Pixel(0, 0, 0)) {
+                setRepPixel(pixel, pos);
+            }
+        }
+    }
+}
 
 
 // Operators

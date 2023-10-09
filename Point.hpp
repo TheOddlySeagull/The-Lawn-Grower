@@ -1,4 +1,8 @@
 #include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <cmath>
 
 #include "Canvas.hpp"
 
@@ -18,6 +22,7 @@ public:
     // Methods
     void insureWithinBounds(Canvas &img);
     void insureWithinBounds(int width, int height);
+    Point rotate(const Point &center, double angleRadians) const;
 
     // Operators
     bool operator==(const Point &p);

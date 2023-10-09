@@ -3,6 +3,11 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <algorithm>
+#include <random>
+#include <chrono>
+#include <thread>
+#include <mutex>
 
 #include "Pixel.hpp"
 #include "Point.hpp"
@@ -28,7 +33,7 @@ public:
     const int getWidth();
     const int getHeight();
     Pixel *getPixels();
-    Pixel getPixel(Point pos);
+    Pixel getPixel(Point pos) const;
 
     // Setters
     void updateImageWidth(int w);
@@ -42,17 +47,27 @@ public:
     void oldFloodRepPixel(Pixel filler, Point pos);
     void floodRepPixel(Pixel filler, Point pos);
     void floodNoRepPixel(Pixel filler, Point pos);
+    Image clone() const;
 
     // Methods
     void exportImage(std::string filename, int width_repititions, int height_repititions);
     void printImageConsole();
 
+    // Color and noise
+    void darken(float amount);
+    void addNoise(double noiseDensity, int noiseSpread, int noiseColorfulness, int noiseSaturation);
+
     // Drawing
     void drawLine(Pixel color, Point p1, Point p2, int thickness);
     void drawCurve(Pixel color, Point p1, Point p2, int offset);
+    void drawCircle(Pixel color, Point center, int radius);
 
-    //Rotating
-    void rotateImage(double angle);
+    // Rotate
+    void rotate(float angleDegrees);
+    void trim(int newWidth, int newHeight);
+
+    // Merging
+    void merge(const Image &other);
 
     // Operators
     friend std::ostream &operator<<(std::ostream &os, const Image &img);

@@ -57,6 +57,23 @@ void Point::insureWithinBounds(int width, int height)
     }
 }
 
+Point Point::rotate(const Point &center, double angleRadians) const {
+    Point rotatedPoint;
+    double s = sin(angleRadians);
+    double c = cos(angleRadians);
+
+    // Translate the point to the origin (subtract the center)
+    double translatedX = this->x - center.x;
+    double translatedY = this->y - center.y;
+
+    // Perform the rotation
+    rotatedPoint.x = static_cast<int>(translatedX * c - translatedY * s + center.x);
+    rotatedPoint.y = static_cast<int>(translatedX * s + translatedY * c + center.y);
+
+    return rotatedPoint;
+}
+
+
 //----------------------------------------------------------------------------------------------------
 // Operators
 //----------------------------------------------------------------------------------------------------
