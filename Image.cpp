@@ -550,34 +550,46 @@ void Image::trim(int newWidth, int newHeight) {
         return;
     }
 
-    // Calculate the offsets to center the image within the new dimensions
-    int xOffset = std::max(0, (width - newWidth) / 2);
-    int yOffset = std::max(0, (height - newHeight) / 2);
-
     // Create a new image buffer for the trimmed image and fill it with black pixels
     Pixel* trimmedPixels = new Pixel[newWidth * newHeight];
     for (int i = 0; i < newWidth * newHeight; i++) {
         trimmedPixels[i] = Pixel(0, 0, 0); // Black pixel
     }
 
-    // Calculate the starting point to copy pixels from the original image
-    int startX = std::max(0, -xOffset);
-    int startY = std::max(0, -yOffset);
+    // Find the size difference between the original image and the trimmed image
+    int widthDiff = width - newWidth;
+    int heightDiff = height - newHeight;
 
-    // Calculate the ending point to copy pixels from the original image
-    int endX = std::min(newWidth, width - xOffset);
-    int endY = std::min(newHeight, height - yOffset);
+    //std::cout << "Width difference: " << widthDiff << std::endl;
+    //std::cout << "Height difference: " << heightDiff << std::endl;
 
-    // Copy the relevant portion of the original image to the new buffer
-    for (int y = startY; y < endY; y++) {
-        for (int x = startX; x < endX; x++) {
-            int originalX = x + xOffset;
-            int originalY = y + yOffset;
+    int orStartX = static_cast<int>(width / 2);
+    int orStartY = static_cast<int>(height / 2);
 
-            // Copy the color from the original image to the trimmed image
-            trimmedPixels[y * newWidth + x] = getPixel(Point(originalX, originalY));
+    //std::cout << "Middle pixel of the original image: " << orStartX << ", " << orStartY << " for image of size " << width << "x" << height << std::endl;
+
+    int nwStartX = static_cast<int>(newWidth / 2);
+    int nwStartY = static_cast<int>(newHeight / 2);
+
+    //std::cout << "Middle pixel of the new image: " << nwStartX << ", " << nwStartY << " for image of size " << newWidth << "x" << newHeight << std::endl;
+
+    // Copy the pixels from the original image to the trimmed image
+    for (int w = 0; w < newWidth; w++) {
+        for (int h = 0; h < newHeight; h++) {
+            int orX = orStartX + w - nwStartX;
+            int orY = orStartY + h - nwStartY;
+
+            //If the pixel is within the bounds of the new image, copy it
+            if (orX >= 0 && orX < width && orY >= 0 && orY < height) {
+                trimmedPixels[h * newWidth + w] = getPixel(Point(orX, orY));
+            }
+
+
         }
     }
+
+
+
 
     // Update the image dimensions and pixel buffer
     width = newWidth;
@@ -611,6 +623,65 @@ void Image::merge(const Image &other) {
     }
 }
 
+void Image::mergeexcept(const Image &other, const Image &except) {
+    std::cout << "Merging except" << std::endl;
+    // Check if the two images have the same dimensions
+    if (width != other.width || height != other.height || width != except.width || height != except.height) {
+        std::cerr << "Error: Images have different dimensions and cannot be merged." << std::endl;
+        std::cout << "width: " << width << " other.width: " << other.width << std::endl;
+        std::cout << "height: " << height << " other.height: " << other.height << std::endl;
+        return;
+    }
+
+    // Iterate through the pixels of the parameter image
+    for (int w = 0; w < other.width; w++) {
+        for (int h = 0; h < other.height; h++) {
+
+            // Check if the pixel is black in the except image
+            if (except.getPixel(Point(w, h)) == Pixel(0, 0, 0) && other.getPixel(Point(w, h)) != Pixel(0, 0, 0)) {
+                Point pos(w, h);
+                Pixel pixel = other.getPixel(pos);
+                setNoRepPixel(pixel, pos);
+            }
+        }
+    }
+}
+
+void Image::expand(const Image &other) {
+    // Calculate the new dimensions
+    int newWidth = width + other.width;
+    int newHeight = std::max(height, other.height);
+
+    // Create a new image buffer for the expanded image and fill it with black pixels
+    Pixel* expandedPixels = new Pixel[newWidth * newHeight];
+    for (int i = 0; i < newWidth * newHeight; i++) {
+        expandedPixels[i] = Pixel(0, 0, 0); // Black pixel
+    }
+
+    // Copy the pixels from the current image to the expanded image
+    for (int w = 0; w < width; w++) {
+        for (int h = 0; h < height; h++) {
+            Point pos(w, h);
+            Pixel pixel = getPixel(pos);
+            expandedPixels[h * newWidth + w] = pixel;
+        }
+    }
+
+    // Copy the pixels from the parameter image to the expanded image
+    for (int w = 0; w < other.width; w++) {
+        for (int h = 0; h < other.height; h++) {
+            Point pos(w, h);
+            Pixel pixel = other.getPixel(pos);
+            expandedPixels[h * newWidth + w + width] = pixel;
+        }
+    }
+
+    // Update the image dimensions and pixel buffer
+    width = newWidth;
+    height = newHeight;
+    delete[] pixels;
+    pixels = expandedPixels;
+}
 
 // Operators
 std::ostream &operator<<(std::ostream &os, const Image &img)

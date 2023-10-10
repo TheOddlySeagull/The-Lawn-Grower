@@ -68,6 +68,8 @@ public:
 
     // Merging
     void merge(const Image &other);
+    void mergeexcept(const Image &other, const Image &except);
+    void expand(const Image &other);
 
     // Operators
     friend std::ostream &operator<<(std::ostream &os, const Image &img);

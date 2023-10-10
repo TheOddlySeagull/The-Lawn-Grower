@@ -575,48 +575,68 @@ int main()
     Pixel petal_color_2 = getRandomFlowerColorExcept(getFlowerColor(petal_color_1));
     Pixel petal_color_3 = getRandomFlowerColorExcept(getFlowerColor(petal_color_2));
 
-    //Image petal_1=generatePetalModel(120, 60, 40, 2, 0.5, petal_color_1);
-    //Image petal_2=generatePetalModel(100, 40, 30, 2, 0.5, petal_color_2);
-    //Image petal_3=generatePetalModel(80, 20, 20, 2, 0.5, petal_color_3);
-
     // petal_1, 2, 3 but with random values
-    Image petal_1=generatePetalModel(100 + rand() % 100, 40 + rand() % 40, 30 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, getRandomFlowerColor());
-    Image petal_2=generatePetalModel(80 + rand() % 100, 20 + rand() % 40, 20 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, getRandomFlowerColor());
-    Image petal_3=generatePetalModel(60 + rand() % 100, 10 + rand() % 40, 10 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, getRandomFlowerColor());
-
+    Image petal_1=generatePetalModel(100 + rand() % 100, 40 + rand() % 40, 30 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_1);
+    Image petal_2=generatePetalModel(80 + rand() % 100, 20 + rand() % 40, 20 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_2);
+    Image petal_3=generatePetalModel(60 + rand() % 100, 10 + rand() % 40, 10 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_3);
 
     std::cout << "Generated petal models: " << petal_1 << ", " << petal_2 << ", " << petal_3 << std::endl;
 
-    Image final_image = petal_1.clone();
+    Image final_image(500, 500);
+    Image final_stepped_image(500, 500);
+    Image half_final_image(500, 500);
 
     int petal_count = 5 + rand() % 10;
     std::cout << "Petal count: " << petal_count << std::endl;
 
+    petal_1.trim(500, 500);
+    petal_2.trim(500, 500);
+
+    final_stepped_image.expand(petal_1);
+    final_stepped_image.expand(petal_2);
+
     petal_3.rotate(360 / petal_count / 2);
+    Image main_petal = petal_1.clone();
+    main_petal.merge(petal_2);
+    
+    final_stepped_image.expand(main_petal);
 
     for (int i = 0; i < petal_count; i++) {
 
         //Rotating
         //std::cout << "Rotating images" << std::endl;
-        petal_1.rotate(360 / petal_count);
-        petal_2.rotate(360 / petal_count);
+        main_petal.rotate(360 / petal_count);
 
         //Trim
         //std::cout << "Trimming images" << std::endl;
-        petal_1.trim(final_image.getWidth(), final_image.getHeight());
-        petal_2.trim(final_image.getWidth(), final_image.getHeight());
+        main_petal.trim(final_image.getWidth(), final_image.getHeight());
 
         //Darkening
         //std::cout << "Darkening images" << std::endl;
-        //petal_1.darken(0.9);
-        //petal_2.darken(0.9);
+        //main_petal.darken(0.9);
+
+        // If at the half of the petal count, save the image
+        if (i == int(petal_count / 2)) {
+            std::cout << "Saving half image at " << i << " petals." << std::endl;
+            half_final_image.merge(final_image);
+        }
 
         //Merging
         //std::cout << "Merging images" << std::endl;
-        final_image.merge(petal_1);
-        final_image.merge(petal_2);
+        // If last petal
+        if (i == petal_count - 1) {
+            std::cout << "Merging last petal at " << i << " petals." << std::endl;
+            final_image.mergeexcept(main_petal, half_final_image);
+        }
+        else {
+            final_image.merge(main_petal);
+        }
+
+        final_stepped_image.expand(final_image);
     
     }
+
+    final_stepped_image.expand(half_final_image);
 
     for (int i = 0; i < petal_count; i++) {
         petal_3.rotate(360 / petal_count);
@@ -624,9 +644,7 @@ int main()
         final_image.merge(petal_3);
     }
 
-    // Add circle at the center
-    //std::cout << "Adding circle" << std::endl;
-    //final_image.drawCircle(getRandomFlowerColor(), Point(final_image.getWidth() / 2, final_image.getHeight() / 2), 50);
+    final_stepped_image.expand(half_final_image);
 
     // Add noise
     //std::cout << "Adding noise" << std::endl;
@@ -636,6 +654,7 @@ int main()
 
     final_image.exportImage("petal_cloned.bmp", 1, 1);
     petal_1.exportImage("petal_rotated.bmp", 1, 1);
+    final_stepped_image.exportImage("petal_stepped.bmp", 1, 1);
 
     std::cout << "Done" << std::endl;
 
