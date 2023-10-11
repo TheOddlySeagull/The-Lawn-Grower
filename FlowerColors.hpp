@@ -1,6 +1,9 @@
 #pragma once // Only include this header once when compiling
 
 #include <map>
+#include <iostream>
+
+
 #include "Pixel.hpp"
 
 /**
@@ -28,3 +31,4 @@ Pixel getFlowerColor(FlowerColors color);
 FlowerColors getFlowerColor(Pixel color);
 Pixel getRandomFlowerColor();
 Pixel getRandomFlowerColorExcept(FlowerColors color);
+Pixel getRandomFlowerColorExcept(FlowerColors colors[]);

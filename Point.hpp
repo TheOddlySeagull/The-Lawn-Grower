@@ -1,12 +1,11 @@
+#ifndef _POINT
+#define _POINT
+
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
 #include <cmath>
-
-#include "Canvas.hpp"
-
-#pragma once
 
 class Point
 {
@@ -20,7 +19,7 @@ public:
     ~Point();
 
     // Methods
-    void insureWithinBounds(Canvas &img);
+    //void insureWithinBounds(Image &img);
     void insureWithinBounds(int width, int height);
     Point rotate(const Point &center, double angleRadians) const;
 
@@ -35,3 +34,5 @@ public:
     Point operator/(const double &d);
 
 };
+
+#endif

@@ -1,5 +1,11 @@
 #include "FlowerColors.hpp"
 
+#include <map>
+#include <iostream>
+#include <algorithm>
+#include <iterator>
+
+
 /**
  * @brief Dictionary mapping FlowerColors to Pixel
  * 
@@ -87,4 +93,50 @@ Pixel getRandomFlowerColorExcept(FlowerColors color)
         random = rand() % length;
     }
     return FlowerColorsMap[static_cast<FlowerColors>(random)];
+}
+
+/**
+ * @brief Get a Random Flower Color Except the provided colors
+ * 
+ * @param colors The colors to exclude from the random selection
+ * @return The Pixel object representing the color
+ */
+Pixel getRandomFlowerColorExcept(FlowerColors colors[])
+{
+    // Get map length
+    int length = FlowerColorsMap.size();
+    int random = rand() % length;
+
+    std::cout << "Random: " << random << " out of " << length << std::endl;
+
+    // Get a random color
+    Pixel randomColor = FlowerColorsMap[static_cast<FlowerColors>(random)];
+
+    std::cout << "Random Color: " << randomColor << std::endl; 
+
+    // Check if the random color is in the colors array
+    bool wip = true;
+
+    while (wip)
+    {
+        // Check if the random color is in the colors array
+        for (int i = 0; i < FlowerColorsMap.size(); i++)
+        {
+            if (randomColor == FlowerColorsMap[colors[i]])
+            {
+                // Get a new random color
+                random = rand() % length;
+                randomColor = FlowerColorsMap[static_cast<FlowerColors>(random)];
+                break;
+            }
+            else if (i == FlowerColorsMap.size() - 1)
+            {
+                // The random color is not in the colors array
+                wip = false;
+            }
+        }
+    }
+    
+    return randomColor;
+    
 }

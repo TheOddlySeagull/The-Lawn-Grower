@@ -1,21 +1,24 @@
 #include "Image.hpp"
-#include <cmath> // for trigonometric functions
-
-
 
 // Private Methods
-Point Image::makePointRep(Point pos)
+void Image::makePointRep(Point* pos)
 {
-    Point newPoint;
-    newPoint.x = pos.x % width;
-    newPoint.y = pos.y % height;
-    if (pos.x < 0) {
-        newPoint.x += width;
+    pos->x = pos->x % width;
+    pos->y = pos->y % height;
+    if (pos->x < 0) {
+        pos->x += width;
     }
-    if (pos.y < 0) {
-        newPoint.y += height;
+    if (pos->y < 0) {
+        pos->y += height;
     }
-    return newPoint;
+}
+
+bool Image::isPointInImage(Point pos)
+{
+    if (pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < height) {
+        return true;
+    }
+    return false;
 }
 
 void Image::floodRepPixelHelper(Pixel filler, Pixel replaced, Point pos, std::vector<Point> &visited)
@@ -37,16 +40,26 @@ void Image::floodRepPixelHelper(Pixel filler, Pixel replaced, Point pos, std::ve
         // replace current point with filler
         pixels[pos.y * width + pos.x] = filler;
 
+        Point north = Point(pos.x, pos.y + 1);
+        Point east = Point(pos.x + 1, pos.y);
+        Point south = Point(pos.x, pos.y - 1);
+        Point west = Point(pos.x - 1, pos.y);
+
+        makePointRep(&north);
+        makePointRep(&east);
+        makePointRep(&south);
+        makePointRep(&west);
+
         // For all 4 adjascent pixels
-        floodRepPixelHelper(filler, replaced, makePointRep(Point(pos.x + 1, pos.y)), visited);
-        floodRepPixelHelper(filler, replaced, makePointRep(Point(pos.x - 1, pos.y)), visited);
-        floodRepPixelHelper(filler, replaced, makePointRep(Point(pos.x, pos.y + 1)), visited);
-        floodRepPixelHelper(filler, replaced, makePointRep(Point(pos.x, pos.y - 1)), visited);
+        floodRepPixelHelper(filler, replaced, north, visited);
+        floodRepPixelHelper(filler, replaced, east, visited);
+        floodRepPixelHelper(filler, replaced, south, visited);
+        floodRepPixelHelper(filler, replaced, west, visited);
     }
 }
 
-// Constructors
 
+// Constructors
 Image::Image()
 {
     width = 0;
@@ -59,7 +72,17 @@ Image::Image(int w, int h)
     width = w;
     height = h;
     pixels = new Pixel[width * height];
-    std::cout << "Image created with width " << width << " and height " << height << std::endl;
+    //std::cout << "Image created with width " << width << " and height " << height << std::endl;
+}
+
+Image::Image(const Image &other)
+{
+    width = other.width;
+    height = other.height;
+    pixels = new Pixel[width * height];
+    for (int i = 0; i < width * height; i++) {
+        pixels[i] = other.pixels[i];
+    }
 }
 
 Image::~Image()
@@ -68,20 +91,20 @@ Image::~Image()
 }
 
 // Getters
-
-const int Image::getWidth()
+int Image::getWidth() const
 {
     return width;
 }
 
-const int Image::getHeight()
+int Image::getHeight() const
 {
     return height;
 }
 
-Pixel *Image::getPixels()
+// Pixel Getters
+Pixel Image::getPixels() const
 {
-    return pixels;
+    return *pixels;
 }
 
 Pixel Image::getPixel(Point pos) const
@@ -89,78 +112,40 @@ Pixel Image::getPixel(Point pos) const
     return pixels[pos.y * width + pos.x];
 }
 
-// Setters
-void Image::updateImageWidth(int w)
+Pixel Image::getPixel(int w, int h) const
 {
-    width = w;
-
-    // Create new array of pixels
-    Pixel *newPixels = new Pixel[width * height];
-
-    // Delete old array of pixels
-    delete[] pixels;
-
-    // Assign new array to pixels
-    pixels = newPixels;
+    return pixels[h * width + w];
 }
-
-void Image::updateImageHeight(int h)
-{
-    height = h;
-
-    // Create new array of pixels
-    Pixel *newPixels = new Pixel[width * height];
-
-    // Delete old array of pixels
-    delete[] pixels;
-
-    // Assign new array to pixels
-    pixels = newPixels;
-}
-
 
 // Pixel Methods
-void Image::setRepPixel(Pixel p, Point pos)
+void Image::setRepPixel(Pixel p, Point* pos)
 {
-    pos.x = pos.x % width-1;
-    pos.y = pos.y % height-1;
-    if (pos.x < 0) {
-        pos.x += width;
-    }
-    if (pos.y < 0) {
-        pos.y += height;
-    }
+    makePointRep(pos);
+
     // Set pixel at pos to p
-    pixels[pos.y * width + pos.x] = p;
+    pixels[pos->y * width + pos->x] = p;
 }
 
 void Image::setNoRepPixel(Pixel p, Point pos)
 {
-    if (pos.x >= 0 || pos.x < width || pos.y >= 0 || pos.y < height) {
+    if (isPointInImage(pos)) {
         // Set pixel at pos to p
         pixels[pos.y * width + pos.x] = p;
     }
 }
 
-void Image::replaceRepPixel(Pixel replacement, Pixel replaced, Point pos)
+void Image::replaceRepPixel(Pixel replacement, Pixel replaced, Point* pos)
 {
-    pos.x = pos.x % width;
-    pos.y = pos.y % height;
-    if (pos.x < 0) {
-        pos.x += width;
-    }
-    if (pos.y < 0) {
-        pos.y += height;
-    }
+    makePointRep(pos);
     // Replace pixel at pos with replacement if it is replaced
-    if (pixels[pos.y * width + pos.x] == replaced) {
-        pixels[pos.y * width + pos.x] = replacement;
+    if (pixels[pos->y * width + pos->x] == replaced) {
+        pixels[pos->y * width + pos->x] = replacement;
     }
 }
 
 void Image::replaceNoRepPixel(Pixel replacement, Pixel replaced, Point pos)
 {
-    if (pos.x >= 0 || pos.x < width || pos.y >= 0 || pos.y < height) {
+    if (isPointInImage(pos)) {
         // Replace pixel at pos with replacement if it is replaced
         if (pixels[pos.y * width + pos.x] == replaced) {
             pixels[pos.y * width + pos.x] = replacement;
@@ -176,10 +161,10 @@ void Image::oldFloodRepPixel(Pixel filler, Point pos)
     Point south = Point(pos.x, pos.y - 1);
     Point west = Point(pos.x - 1, pos.y);
 
-    north = makePointRep(north);
-    east = makePointRep(east);
-    south = makePointRep(south);
-    west = makePointRep(west);
+    makePointRep(&north);
+    makePointRep(&east);
+    makePointRep(&south);
+    makePointRep(&west);
 
     exportImage("test.bmp", 1, 1);
 
@@ -202,11 +187,21 @@ void Image::floodRepPixel(Pixel filler, Point pos)
     // Make an array of visited pixels
     std::vector<Point> visited;
 
+    Point north = Point(pos.x, pos.y + 1);
+    Point east = Point(pos.x + 1, pos.y);
+    Point south = Point(pos.x, pos.y - 1);
+    Point west = Point(pos.x - 1, pos.y);
+
+    makePointRep(&north);
+    makePointRep(&east);
+    makePointRep(&south);
+    makePointRep(&west);
+
     // for all 4 adjascent pixels
-    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], makePointRep(Point(pos.x - 1, pos.y)), visited);
-    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], makePointRep(Point(pos.x + 1, pos.y)), visited);
-    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], makePointRep(Point(pos.x, pos.y - 1)), visited);
-    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], makePointRep(Point(pos.x, pos.y + 1)), visited);
+    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], north, visited);
+    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], east, visited);
+    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], south, visited);
+    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], west, visited);
 
 }
 
@@ -232,6 +227,7 @@ void Image::floodNoRepPixel(Pixel filler, Point pos)
     }
 }
 
+// Image Methods
 void Image::exportImage(std::string filename, int width_repititions, int height_repititions) {
     // Calculate the new width and height based on repetitions
     int newWidth = width * width_repititions;
@@ -325,23 +321,9 @@ void Image::printImageConsole()
     }
 }
 
-Image Image::clone() const {
-    Image clonedImage(width, height);
-
-    // Iterate through the pixels of the current image and copy them to the cloned image
-    for (int w = 0; w < width; w++) {
-        for (int h = 0; h < height; h++) {
-            Point pos(w, h);
-            Pixel pixel = getPixel(pos);
-            clonedImage.setRepPixel(pixel, pos);
-        }
-    }
-
-    return clonedImage;
-}
 
 // Color and noise
-void Image::darken(float amount) {
+void Image::colorFilter(float amount) {
     // Iterate through the pixels of the current image
     for (int w = 0; w < width; w++) {
         for (int h = 0; h < height; h++) {
@@ -353,8 +335,13 @@ void Image::darken(float amount) {
             int newGreen = static_cast<int>(pixel.getGreen() * amount);
             int newBlue = static_cast<int>(pixel.getBlue() * amount);
 
+            // Make sure the new color components are within bounds
+            newRed = std::min(std::max(newRed, 0), 255);
+            newGreen = std::min(std::max(newGreen, 0), 255);
+            newBlue = std::min(std::max(newBlue, 0), 255);
+
             // Update the pixel color
-            setRepPixel(Pixel(newRed, newGreen, newBlue), pos);
+            setRepPixel(Pixel(newRed, newGreen, newBlue), &pos);
         }
     }
 }
@@ -402,17 +389,21 @@ void Image::drawLine(Pixel color, Point p1, Point p2, int thickness) {
     int sy = (p1.y < p2.y) ? 1 : -1;
     int err = dx - dy;
     int err2;
+
+    makePointRep(&p2);
     
     while (true) {
         // Draw the central pixel
-        setRepPixel(color, p1);
+        setRepPixel(color, &p1);
 
         // Draw additional pixels for thickness
         for (int t = 1; t <= thickness; t++) {
             int xt = p1.x + t * sx;
             int yt = p1.y + t * sy;
 
-            setRepPixel(color, Point(xt, yt));
+            Point pos(xt, yt);
+
+            setRepPixel(color, &pos);
         }
 
         if (p1.x == p2.x && p1.y == p2.y) {
@@ -462,8 +453,11 @@ void Image::drawCurve(Pixel color, Point p1, Point p2, int offset) {
         double x = u * u * p1.x + 2 * u * t * controlX + t * t * p2.x;
         double y = u * u * p1.y + 2 * u * t * controlY + t * t * p2.y;
 
+        // Create a point from the calculated coordinates
+        Point pos(static_cast<int>(x), static_cast<int>(y));
+
         // Draw the point using setRepPixel
-        setRepPixel(color, Point(static_cast<int>(x), static_cast<int>(y)));
+        setRepPixel(color, &pos);
     }
 }
 
@@ -475,14 +469,20 @@ void Image::drawCircle(Pixel color, Point center, int radius) {
     while (x >= y) {
         // Draw horizontal scanlines
         for (int i = center.x - x; i <= center.x + x; i++) {
-            setRepPixel(color, Point(i, center.y + y));
-            setRepPixel(color, Point(i, center.y - y));
+
+            Point pos(i, center.y + y);
+            setRepPixel(color, &pos);
+            pos.y = center.y - y;
+            setRepPixel(color, &pos);
         }
 
         // Draw vertical scanlines
         for (int i = center.x - y; i <= center.x + y; i++) {
-            setRepPixel(color, Point(i, center.y + x));
-            setRepPixel(color, Point(i, center.y - x));
+
+            Point pos(i, center.y + x);
+            setRepPixel(color, &pos);
+            pos.y = center.y - x;
+            setRepPixel(color, &pos);
         }
 
         y++;
@@ -496,8 +496,102 @@ void Image::drawCircle(Pixel color, Point center, int radius) {
     }
 }
 
+void Image::drawPartialEmptyCircle(int radius, double startAngle, double endAngle, Point center, Pixel color) {
+    // Ensure that startAngle and endAngle are within the range [0, 360]
+    startAngle = fmod(startAngle, 360.0);
+    endAngle = fmod(endAngle, 360.0);
 
-// Rotate
+    // Convert startAngle and endAngle to radians
+    double startAngleRad = startAngle * M_PI / 180.0;
+    double endAngleRad = endAngle * M_PI / 180.0;
+
+    // Draw the partial circle using the specified angles
+    for (double angle = startAngleRad; angle <= endAngleRad; angle += 0.01) {
+        int x = static_cast<int>(center.x + radius * cos(angle));
+        int y = static_cast<int>(center.y + radius * sin(angle));
+
+        // Make sure the calculated pixel coordinates are within the image bounds
+        if (x >= 0 && x < getWidth() && y >= 0 && y < getHeight()) {
+            setRepPixel(color, new Point(x, y));
+        }
+    }
+}
+
+void Image::drawPartialCheeseWheel(int radius, double startAngle, double endAngle, Point center, Pixel color) {
+    // Value adaptation for this function
+    if (startAngle < 0 || endAngle < 0 || startAngle > 360 || endAngle > 360) {
+        std::cout << "Invalid angle detected, dividing to 2 itterations." << std::endl;
+        int new_startAngle_1 = 0;
+        int new_endAngle_1 = 0;
+        int new_startAngle_2 = 0;
+        int new_endAngle_2 = 0;
+        
+        // If angle is negative, divide the shape into two parts and draw them separately
+        if (startAngle < 0) {
+            std::cout << "Start angle less than 0 detected" << std::endl;
+
+            new_startAngle_1 = 360 + startAngle;
+            new_endAngle_1 = 360.0;
+            new_startAngle_2 = 0;
+            new_endAngle_2 = endAngle;
+
+        }
+        if (endAngle >= 360) {
+            std::cout << "End angle greater than 360 detected" << std::endl;
+
+            new_startAngle_1 = startAngle;
+            new_endAngle_1 = 360.0;
+            new_startAngle_2 = 0;
+            new_endAngle_2 = endAngle - 360;
+
+        }
+
+        // Draw the first part of the circle
+        drawPartialCheeseWheel(radius, new_startAngle_1, new_endAngle_1, center, color);
+        drawPartialCheeseWheel(radius, new_startAngle_2, new_endAngle_2, center, color);
+
+        return;
+    }
+
+    // Calculate the bounding box for the partial circle
+    int xMin = center.x - radius;
+    int xMax = center.x + radius;
+    int yMin = center.y - radius;
+    int yMax = center.y + radius;
+
+    // Loop through the bounding box and check each pixel if it's inside the partial circle
+    for (int x = xMin; x <= xMax; x++) {
+        for (int y = yMin; y <= yMax; y++) {
+            // Calculate the angle of the current pixel relative to the circle's center
+            double pixelAngle = atan2(y - center.y, x - center.x) * (180.0 / M_PI);
+
+            // Ensure pixelAngle is within [0, 360] degrees
+            pixelAngle = (pixelAngle < 0) ? pixelAngle + 360.0 : pixelAngle;
+
+            // Check if the pixel is within the specified angle range
+            if (pixelAngle >= startAngle && pixelAngle <= endAngle) {
+                // Calculate the distance from the center of the circle to the current pixel
+                double distance = sqrt(pow(x - center.x, 2) + pow(y - center.y, 2));
+
+                // Check if the pixel is within the circle's radius
+                if (distance <= radius) {
+                    // Set the pixel color
+                    setRepPixel(color, new Point(x, y));
+                }
+            }
+        }
+    }
+}
+
+void Image::drawFilledCircleWithBorder(int radius, Point center, Pixel fillColor, Pixel borderColor) {
+    // Draw the filled circle with the fillColor
+    drawCircle(fillColor, center, radius);
+
+    // Draw a slightly smaller circle with the borderColor to create the border effect
+    drawCircle(borderColor, center, radius - 1);
+}
+
+// Rotating
 void Image::rotate(float angleDegrees) {
     if (angleDegrees == 0) {
         // No rotation needed
@@ -544,6 +638,7 @@ void Image::rotate(float angleDegrees) {
     pixels = rotatedPixels;
 }
 
+// Trimming
 void Image::trim(int newWidth, int newHeight) {
     if (newWidth <= 0 || newHeight <= 0) {
         // Invalid dimensions
@@ -560,18 +655,13 @@ void Image::trim(int newWidth, int newHeight) {
     int widthDiff = width - newWidth;
     int heightDiff = height - newHeight;
 
-    //std::cout << "Width difference: " << widthDiff << std::endl;
-    //std::cout << "Height difference: " << heightDiff << std::endl;
-
+    // Calculate the starting point of the original image in the trimmed image
     int orStartX = static_cast<int>(width / 2);
     int orStartY = static_cast<int>(height / 2);
 
-    //std::cout << "Middle pixel of the original image: " << orStartX << ", " << orStartY << " for image of size " << width << "x" << height << std::endl;
-
+    // Calculate the starting point of the trimmed image in the original image
     int nwStartX = static_cast<int>(newWidth / 2);
     int nwStartY = static_cast<int>(newHeight / 2);
-
-    //std::cout << "Middle pixel of the new image: " << nwStartX << ", " << nwStartY << " for image of size " << newWidth << "x" << newHeight << std::endl;
 
     // Copy the pixels from the original image to the trimmed image
     for (int w = 0; w < newWidth; w++) {
@@ -583,13 +673,8 @@ void Image::trim(int newWidth, int newHeight) {
             if (orX >= 0 && orX < width && orY >= 0 && orY < height) {
                 trimmedPixels[h * newWidth + w] = getPixel(Point(orX, orY));
             }
-
-
         }
     }
-
-
-
 
     // Update the image dimensions and pixel buffer
     width = newWidth;
@@ -597,6 +682,74 @@ void Image::trim(int newWidth, int newHeight) {
     delete[] pixels;
     pixels = trimmedPixels;
 }
+
+
+//Scaling
+void Image::scale(int new_scale) {
+    int default_scale = 8000;
+
+    int new_height = height * new_scale / default_scale;
+    int new_width = width * new_scale / default_scale;
+
+    //std::cout << "Default scale: " << default_scale << " has size: " << width << "x" << height << " and new scale: " << new_scale << " has size: " << new_width << "x" << new_height << std::endl;
+
+    //If resizing in needed:
+    if (new_scale != default_scale) {
+        resize(new_width, new_height);
+    }
+}
+
+//Resize
+void Image::resize(int new_width, int new_height) {
+    //std::cout << "Resizing image from " << width << "x" << height << " to " << new_width << "x" << new_height << std::endl;
+    // Create a new image with the desired dimensions
+    Image resizedImage(new_width, new_height);
+
+    // Calculate scaling factors for width and height
+    double xScale = static_cast<double>(width) / new_width;
+    double yScale = static_cast<double>(height) / new_height;
+
+    for (int y = 0; y < new_height; y++) {
+        for (int x = 0; x < new_width; x++) {
+            // Calculate the corresponding position in the original image using interpolation
+            double srcX = x * xScale;
+            double srcY = y * yScale;
+
+            // Calculate the coordinates of the surrounding pixels in the original image
+            int x1 = static_cast<int>(srcX);
+            int x2 = std::min(x1 + 1, width - 1);
+            int y1 = static_cast<int>(srcY);
+            int y2 = std::min(y1 + 1, height - 1);
+
+            // Calculate interpolation weights
+            double xWeight = srcX - x1;
+            double yWeight = srcY - y1;
+
+            // Perform bilinear interpolation to calculate the pixel color
+            Pixel interpolatedPixel = getPixel(x1, y1) * ((1 - xWeight) * (1 - yWeight)) +
+                                      getPixel(x2, y1) * (xWeight * (1 - yWeight)) +
+                                      getPixel(x1, y2) * ((1 - xWeight) * yWeight) +
+                                      getPixel(x2, y2) * (xWeight * yWeight);
+
+            // Set the pixel in the resized image
+            Point pos(x, y);
+            resizedImage.setRepPixel(interpolatedPixel, &pos);
+        }
+    }
+
+    // Replace the current image with the resized image
+    width = new_width;
+    height = new_height;
+    delete[] pixels;
+    pixels = new Pixel[width * height];
+
+    // Copy the pixels from the resized image to the current image
+    for (int i = 0; i < width * height; i++) {
+        pixels[i] = resizedImage.pixels[i];
+    }
+}
+
+
 
 
 // Merging
@@ -617,14 +770,37 @@ void Image::merge(const Image &other) {
 
             // Only merge non-black pixels
             if (pixel != Pixel(0, 0, 0)) {
-                setRepPixel(pixel, pos);
+                setRepPixel(pixel, &pos);
             }
         }
     }
 }
 
-void Image::mergeexcept(const Image &other, const Image &except) {
-    std::cout << "Merging except" << std::endl;
+void Image::merge(const Image &other, Point pos) {
+    // Check if the two images have the same dimensions
+    if (width != other.width || height != other.height) {
+        std::cerr << "Error: Images have different dimensions and cannot be merged." << std::endl;
+        std::cout << "width: " << width << " other.width: " << other.width << std::endl;
+        std::cout << "height: " << height << " other.height: " << other.height << std::endl;
+        return;
+    }
+
+    // Iterate through the pixels of the parameter image
+    for (int w = 0; w < other.width; w++) {
+        for (int h = 0; h < other.height; h++) {
+            Point otherPos(w, h);
+            Pixel pixel = other.getPixel(otherPos);
+
+            // Only merge non-black pixels
+            if (pixel != Pixel(0, 0, 0)) {
+                Point newPos = pos + otherPos;
+                setRepPixel(pixel, &newPos);
+            }
+        }
+    }
+}
+
+void Image::mergeExcept(const Image &other, const Image &except) {
     // Check if the two images have the same dimensions
     if (width != other.width || height != other.height || width != except.width || height != except.height) {
         std::cerr << "Error: Images have different dimensions and cannot be merged." << std::endl;
@@ -643,6 +819,58 @@ void Image::mergeexcept(const Image &other, const Image &except) {
                 Pixel pixel = other.getPixel(pos);
                 setNoRepPixel(pixel, pos);
             }
+        }
+    }
+}
+
+void Image::mergeExcept(const Image &other, const Image &except, Point pos) {
+    // Check if the two images have the same dimensions
+    if (width != other.width || height != other.height || width != except.width || height != except.height) {
+        std::cerr << "Error: Images have different dimensions and cannot be merged." << std::endl;
+        std::cout << "width: " << width << " other.width: " << other.width << std::endl;
+        std::cout << "height: " << height << " other.height: " << other.height << std::endl;
+        return;
+    }
+
+    // Iterate through the pixels of the parameter image
+    for (int w = 0; w < other.width; w++) {
+        for (int h = 0; h < other.height; h++) {
+
+            // Check if the pixel is black in the except image
+            if (except.getPixel(Point(w, h)) == Pixel(0, 0, 0) && other.getPixel(Point(w, h)) != Pixel(0, 0, 0)) {
+                Point otherPos(w, h);
+                Pixel pixel = other.getPixel(otherPos);
+                Point newPos = pos + otherPos;
+                setNoRepPixel(pixel, newPos);
+            }
+        }
+    }
+}
+
+void Image::mergeLayerRep(const Image &other, Point pos) {
+
+    // Iterate through the pixels of the parameter image
+    for (int w = 0; w < other.width; w++) {
+        for (int h = 0; h < other.height; h++) {
+            Point otherPos(w, h);
+            Point newPos = pos + otherPos;
+
+            //If pixel is not black
+            if (other.getPixel(otherPos) != Pixel(0, 0, 0)) {
+                setRepPixel(other.getPixel(otherPos), &newPos);
+            }
+        }
+    }
+}
+
+void Image::mergeLayerNoRep(const Image &other, Point pos) {
+
+    // Iterate through the pixels of the parameter image
+    for (int w = 0; w < other.width; w++) {
+        for (int h = 0; h < other.height; h++) {
+            Point otherPos(w, h);
+
+            setNoRepPixel(other.getPixel(otherPos), pos + otherPos);
         }
     }
 }

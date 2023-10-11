@@ -81,6 +81,10 @@ Pixel Pixel::operator*(const double &d)
 {
     return Pixel((int)(red * d), (int)(green * d), (int)(blue * d));
 }
+Pixel Pixel::operator+(const Pixel &p)
+{
+    return Pixel(red + p.red, green + p.green, blue + p.blue);
+}
 bool Pixel::operator==(const Pixel &p)
 {
     return (red == p.red && green == p.green && blue == p.blue);

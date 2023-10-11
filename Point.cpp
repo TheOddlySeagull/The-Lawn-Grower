@@ -27,7 +27,7 @@ Point::~Point()
  * 
  * @param img The canvas to insure the point is within (Canvas object)
  */
-void Point::insureWithinBounds(Canvas &img)
+/*void Point::insureWithinBounds(Image &img)
 {
     this->x = this->x % img.getWidth();
     this->y = this->y % img.getHeight();
@@ -40,7 +40,7 @@ void Point::insureWithinBounds(Canvas &img)
     {
         this->y += img.getHeight();
     }
-}
+}*/
 
 void Point::insureWithinBounds(int width, int height)
 {

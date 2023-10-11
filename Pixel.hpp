@@ -33,6 +33,7 @@ public:
 
     // operators
     Pixel operator*(const double &d);
+    Pixel operator+(const Pixel &p);
     bool operator==(const Pixel &p);
     bool operator!=(const Pixel &p);
     friend std::ostream &operator<<(std::ostream &os, const Pixel &p);
