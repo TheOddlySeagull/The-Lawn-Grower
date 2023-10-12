@@ -4,6 +4,7 @@
 #include <ctime>
 #include <algorithm>
 #include <unistd.h>
+#include <thread>
 
 #include "Canvas.hpp"
 #include "FlowerColors.hpp"
@@ -20,10 +21,10 @@
  * @param color The color of the petal
  * @return The generated petal model as a Image object
  */
-Image generatePetalModel(int length, int topWidth, int topCurvature, int pointOffset, double sideCurveFactor, Pixel color) {
+Image generatePetalModel(petal_values petal) {
 
     // Generate the image based on the size
-    int imageWidth = (length + pointOffset) * 3;
+    int imageWidth = (petal.length + petal.pointOffset) * 3;
     // Turn imageWidth into the highest 100 multiple
     imageWidth = (imageWidth / 100 + 1) * 100;
     int imageHeight = imageWidth;
@@ -32,27 +33,27 @@ Image generatePetalModel(int length, int topWidth, int topCurvature, int pointOf
     // Get the center point
     Point center(imageWidth / 2, imageHeight / 2);
 
-    Point top(center.x, center.y + length);
+    Point top(center.x, center.y + petal.length);
 
     // Get the side points
-    Point sideR(top.x + topWidth / 2, top.y);
-    Point sideL(top.x - topWidth / 2, top.y);
+    Point sideR(top.x + petal.topWidth / 2, top.y);
+    Point sideL(top.x - petal.topWidth / 2, top.y);
 
-    top.y = top.y + topCurvature/2 + pointOffset;
+    top.y = top.y + petal.topCurvature/2 + petal.pointOffset;
 
     //std::cout << "center: " << center << ", top: " << top << std::endl;
 
     //petalImage.drawLine(color, center, top, 0);
     //petalImage.drawLine(color, sideR, sideL, 0);
-    petalImage.drawCurve(color, sideR, sideL, -topCurvature);
-    petalImage.drawCurve(color, center, sideR, -topWidth * sideCurveFactor);
-    petalImage.drawCurve(color, center, sideL, topWidth * sideCurveFactor);
+    petalImage.drawCurve(petal.color, sideR, sideL, -petal.topCurvature);
+    petalImage.drawCurve(petal.color, center, sideR, -petal.topWidth * petal.sideCurveFactor);
+    petalImage.drawCurve(petal.color, center, sideL, petal.topWidth * petal.sideCurveFactor);
     //petalImage.drawCurve(color, top, sideL, -topWidth / 20);
     //petalImage.drawCurve(color, top, sideR, topWidth / 20);
 
     // flood fill center of the petal (between center and top)
     Point centerTop((center.x + top.x) / 2, (center.y + top.y) / 2);
-    petalImage.floodNoRepPixel(color, centerTop);
+    petalImage.floodNoRepPixel(petal.color, centerTop);
 
 
     return petalImage;
@@ -173,22 +174,12 @@ void drawFlowerCrown(Canvas& img, Point pos, double sizeFactor, double darkenFac
 
 }
 
-Image generatePetaledFlower(bool get_stepped=false) {
-
-    //std::cout << "Generating petaled flower" << std::endl;
-
-    Pixel petal_color_1 = getRandomFlowerColor();
-    Pixel petal_color_2 = getRandomFlowerColorExcept(getFlowerColor(petal_color_1));
-    FlowerColors used_colors[2] = {getFlowerColor(petal_color_1), getFlowerColor(petal_color_2)};
-    //Pixel petal_color_3 = getRandomFlowerColorExcept(used_colors);
-    Pixel petal_color_3 = getRandomFlowerColorExcept(getFlowerColor(petal_color_2));
-
-    std::cout << "Drawing Flower (petaled type) with colors: " << petal_color_1 << ", " << petal_color_2 << ", " << petal_color_3 << std::endl;
+Image generatePetaledFlower(petal_values petal_1_values, petal_values petal_2_values, petal_values petal_3_values, bool get_stepped = false) {
 
     // Generate the petal models
-    Image petal_1=generatePetalModel(100 + rand() % 100, 40 + rand() % 40, 30 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_1);
-    Image petal_2=generatePetalModel(80 + rand() % 100, 20 + rand() % 40, 20 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_2);
-    Image petal_3=generatePetalModel(60 + rand() % 100, 10 + rand() % 40, 10 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_3);
+    Image petal_1=generatePetalModel(petal_1_values);
+    Image petal_2=generatePetalModel(petal_2_values);
+    Image petal_3=generatePetalModel(petal_3_values);
 
     // Generate the canvas for the flower
     Image final_image(500, 500);
@@ -327,13 +318,30 @@ void drawFlatGrass(Canvas& img, TextureZone zone, Pixel color, double darkenFact
     //std::cout << "Done drawing grass" << std::endl;
 }
 
+
+//drawPetaledFlower
+void drawPetaledFlower(Canvas& main_canvas, Point pos, petal_values petal_1_values, petal_values petal_2_values, petal_values petal_3_values) {
+
+
+    // Get the petaled flower
+    Image petaled_flower = generatePetaledFlower(petal_1_values, petal_2_values, petal_3_values);
+
+    // Scale up/down
+    petaled_flower.scale(main_canvas.getScale());
+
+    // Draw the petaled flower
+    main_canvas.mergeLayerRep(petaled_flower, pos);
+}
+
+    
+
 int main()
 {
     // Generate a seed for the random number generator
     srand(time(NULL));
 
     // Create an image with scale
-    Canvas main_canvas(4000, 4000, 8000);
+    Canvas main_canvas(4000, 4000, 2000);
 
     if (main_canvas.getScale() < 160)
     {
@@ -395,19 +403,29 @@ int main()
     for (int i = 0; i<petaledCount; i++)
     {
 
-        std::cout << i + 1 << "/" << petaledCount << " - ";
-
         // Random position
         Point pos = poppy_zone.GetRandomAvailablePosition(&main_canvas);
 
-        // Get the petaled flower
-        Image petaled_flower = generatePetaledFlower();
+        // Random petal colors
+        Pixel petal_color_1 = getRandomFlowerColor();
+        Pixel petal_color_2 = getRandomFlowerColorExcept(getFlowerColor(petal_color_1));
+        Pixel petal_color_3 = getRandomFlowerColorExcept(getFlowerColor(petal_color_2));
 
-        // Scale up/down
-        petaled_flower.scale(main_canvas.getScale());
+        //Fill an array
+        Pixel petal_colors[3] = {petal_color_1, petal_color_2, petal_color_3};
 
-        // Draw the petaled flower
-        main_canvas.mergeLayerRep(petaled_flower, pos);
+        std::cout  << i + 1 << "/" << petaledCount << " - Drawing Flower (petaled type) with colors: " << petal_color_1 << ", " << petal_color_2 << ", " << petal_color_3 << std::endl;
+
+        //Create all the petal values
+        petal_values petal_1_values = {100 + rand() % 100, 40 + rand() % 40, 30 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_1};
+        petal_values petal_2_values = {80 + rand() % 100, 20 + rand() % 40, 20 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_2};
+        petal_values petal_3_values = {60 + rand() % 100, 10 + rand() % 40, 10 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_3};
+
+        //drawPetaledFlower(main_canvas, pos, petal_1_values, petal_2_values, petal_3_values);
+
+        //Run drawPetaledFlower on another thread
+        std::thread t1(drawPetaledFlower, std::ref(main_canvas), pos, petal_1_values, petal_2_values, petal_3_values);
+        t1.detach();
     }
 
     //----------------------------------------------------------------------------------

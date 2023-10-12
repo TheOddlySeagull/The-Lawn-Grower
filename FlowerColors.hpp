@@ -32,3 +32,14 @@ FlowerColors getFlowerColor(Pixel color);
 Pixel getRandomFlowerColor();
 Pixel getRandomFlowerColorExcept(FlowerColors color);
 Pixel getRandomFlowerColorExcept(FlowerColors colors[]);
+
+
+struct petal_values
+{
+    int length;
+    int topWidth;
+    int topCurvature;
+    int pointOffset;
+    double sideCurveFactor;
+    Pixel color;
+};
