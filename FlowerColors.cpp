@@ -20,7 +20,9 @@ std::map<FlowerColors, Pixel> FlowerColorsMap = {
     {LIGHT_BLUE, Pixel(40, 230, 255)},
     {LAVENDER, Pixel(119, 88, 209)},
     {LIGHT_MAUVE, Pixel(206, 172, 212)},
-    {LIGHT_ORANGE, Pixel(229, 191, 150)}
+    {LIGHT_ORANGE, Pixel(229, 191, 150)},
+    {FLASHY_YELLOW, Pixel(255, 216, 0)},
+    {DARK_PURPLE, Pixel(23, 0, 86)},
 };
 
 /**

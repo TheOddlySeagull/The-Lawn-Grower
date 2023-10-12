@@ -20,7 +20,9 @@ enum FlowerColors {
     LIGHT_BLUE = 6,
     LAVENDER = 7,
     LIGHT_MAUVE = 8,
-    LIGHT_ORANGE = 9
+    LIGHT_ORANGE = 9,
+    FLASHY_YELLOW = 10,
+    DARK_PURPLE = 11,
 };
 
 // Dictionary mapping FlowerColors to Pixel
