@@ -229,10 +229,6 @@ void Image::floodNoRepPixel(Pixel filler, Point pos)
 
 // Image Methods
 void Image::exportImage(std::string filename, int width_repititions, int height_repititions) {
-    // Calculate the new width and height based on repetitions
-    int newWidth = width * width_repititions;
-    int newHeight = height * height_repititions;
-
     // Open the output file for writing
     std::ofstream outputFile(filename, std::ios::binary);
 
@@ -241,10 +237,14 @@ void Image::exportImage(std::string filename, int width_repititions, int height_
         return;
     }
 
-    // Calculate the file size
-    int fileSize = 54 + (3 * newWidth * newHeight);
+    // Calculate the new width and height based on repetitions
+    int newWidth = width * width_repititions;
+    int newHeight = height * height_repititions;
 
-    // BMP header data (54 bytes)
+    // Write the image header (assuming a simple BMP format)
+    // You may need to adapt this part based on your image format
+    // Here's a very basic example for a 24-bit BMP header
+    int fileSize = 54 + (3 * newWidth * newHeight);
     char header[54] = {
         'B', 'M', // BMP magic number
         fileSize & 0xFF, (fileSize >> 8) & 0xFF, (fileSize >> 16) & 0xFF, (fileSize >> 24) & 0xFF, // File size
@@ -263,35 +263,18 @@ void Image::exportImage(std::string filename, int width_repititions, int height_
         0, 0, 0, 0  // Important colors (none)
     };
 
-    // Write the BMP header to the output file
     outputFile.write(header, 54);
 
-    // Calculate the padding size (each row must be a multiple of 4 bytes)
-    int paddingSize = (4 - (newWidth * 3) % 4) % 4;
-
-    // Create an array to store the padding bytes (if needed)
-    char padding[4] = {0, 0, 0, 0};
-
-    // Loop to write the image data, repeating it width_repititions times
+    // Write the image data, repeating it width_repititions and height_repititions times
     for (int h_rep = 0; h_rep < height_repititions; h_rep++) {
         for (int h = height - 1; h > -1; h--) {
             for (int w_rep = 0; w_rep < width_repititions; w_rep++) {
-                for (int w = 0; w < newWidth; w++) {
-                    // Calculate the corresponding pixel position in the original image
-                    int srcX = w / width_repititions;
-                    int srcY = h / height_repititions;
-
-                    Pixel &pixel = pixels[srcY * width + srcX];
-
+                for (int w = 0; w < width; w++) {
+                    Pixel& pixel = pixels[h * width + w];
                     // Write the pixel color data (BGR order for BMP)
                     outputFile.put(pixel.getBlue());
                     outputFile.put(pixel.getGreen());
                     outputFile.put(pixel.getRed());
-                }
-
-                // Write padding bytes (if needed)
-                if (paddingSize > 0) {
-                    outputFile.write(padding, paddingSize);
                 }
             }
         }
