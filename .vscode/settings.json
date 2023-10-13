@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.pl": "prolog",
         "random": "cpp",
         "iostream": "cpp",
         "ostream": "cpp",
@@ -59,6 +60,8 @@
         "xiosbase": "cpp",
         "xstring": "cpp",
         "xtree": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "chrono": "cpp",
+        "sstream": "cpp"
     }
 }

@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <random>
 
-#include "Pixel.hpp"
+#include "Color.hpp"
 #include "Point.hpp"
 
 class Image
@@ -17,11 +17,11 @@ class Image
 protected:
     int width;
     int height;
-    Pixel *pixels;
+    Color *Colors;
 
     void makePointRep(Point* pos);
     bool isPointInImage(Point pos);
-    void floodRepPixelHelper(Pixel filler, Pixel replaced, Point pos, std::vector<Point> &points);
+    void floodRepColorHelper(Color filler, Color replaced, Point pos, std::vector<Point> &points);
 public:
     // Constructors
     Image();
@@ -33,19 +33,19 @@ public:
     int getWidth() const;
     int getHeight() const;
 
-    // Pixel Getters
-    Pixel getPixels() const;
-    Pixel getPixel(Point pos) const;
-    Pixel getPixel(int w, int h) const;
+    // Color Getters
+    Color getColors() const;
+    Color getColor(Point pos) const;
+    Color getColor(int w, int h) const;
 
-    // Pixel Methods
-    void setRepPixel(Pixel p, Point* pos);
-    void setNoRepPixel(Pixel p, Point pos);
-    void replaceRepPixel(Pixel replacement, Pixel replaced, Point* pos);
-    void replaceNoRepPixel(Pixel replacement, Pixel replaced, Point pos);
-    void oldFloodRepPixel(Pixel filler, Point pos);
-    void floodRepPixel(Pixel filler, Point pos);
-    void floodNoRepPixel(Pixel filler, Point pos);
+    // Color Methods
+    void setRepColor(Color p, Point* pos);
+    void setNoRepColor(Color p, Point pos);
+    void replaceRepColor(Color replacement, Color replaced, Point* pos);
+    void replaceNoRepColor(Color replacement, Color replaced, Point pos);
+    void oldFloodRepColor(Color filler, Point pos);
+    void floodRepColor(Color filler, Point pos);
+    void floodNoRepColor(Color filler, Point pos);
 
     // Image Methods
     void exportImage(std::string filename, int width_repititions, int height_repititions);
@@ -56,12 +56,12 @@ public:
     void addNoise(double noiseDensity, int noiseSpread, int noiseColorfulness, int noiseSaturation);
 
     // Drawing
-    void drawLine(Pixel color, Point p1, Point p2, int thickness);
-    void drawCurve(Pixel color, Point p1, Point p2, int offset);
-    void drawCircle(Pixel color, Point center, int radius);
-    void drawPartialEmptyCircle(int radius, double startAngle, double endAngle, Point center, Pixel color);
-    void drawPartialCheeseWheel(int radius, double startAngle, double endAngle, Point center, Pixel color);
-    void drawFilledCircleWithBorder(int radius, Point center, Pixel fillColor, Pixel borderColor);
+    void drawLine(Color color, Point p1, Point p2, int thickness);
+    void drawCurve(Color color, Point p1, Point p2, int offset);
+    void drawCircle(Color color, Point center, int radius);
+    void drawPartialEmptyCircle(int radius, double startAngle, double endAngle, Point center, Color color);
+    void drawPartialCheeseWheel(int radius, double startAngle, double endAngle, Point center, Color color);
+    void drawFilledCircleWithBorder(int radius, Point center, Color fillColor, Color borderColor);
 
     // Rotating
     void rotate(float angleDegrees);

@@ -1,10 +1,16 @@
-#pragma once // Only include this header once when compiling
+#ifndef _FLOWERCOLORS
+#define _FLOWERCOLORS
 
 #include <map>
 #include <iostream>
+#include <algorithm>
+#include <random>
+#include <chrono>
+#include <vector>
 
 
-#include "Pixel.hpp"
+#include "Color.hpp"
+
 
 /**
  * @brief Enum for Flower Colors
@@ -25,15 +31,15 @@ enum FlowerColors {
     DARK_PURPLE = 11,
 };
 
-// Dictionary mapping FlowerColors to Pixel
-extern std::map<FlowerColors, Pixel> FlowerColorsMap;
+// Dictionary mapping FlowerColors to Color
+extern std::map<FlowerColors, Color> FlowerColorsMap;
 
 void printFlowerColorsMap();
-Pixel getFlowerColor(FlowerColors color);
-FlowerColors getFlowerColor(Pixel color);
-Pixel getRandomFlowerColor();
-Pixel getRandomFlowerColorExcept(FlowerColors color);
-Pixel getRandomFlowerColorExcept(FlowerColors colors[]);
+Color getRandomFlowerColor();
+Color getRandomFlowerColorExcept(Color color);
+Color getRandomFlowerColorExcept(std::vector<Color> colors);
+Color getFlowerColor(FlowerColors color);
+FlowerColors getFlowerColor(Color color);
 
 
 struct petal_values
@@ -43,5 +49,7 @@ struct petal_values
     int topCurvature;
     int pointOffset;
     double sideCurveFactor;
-    Pixel color;
+    Color color;
 };
+
+#endif

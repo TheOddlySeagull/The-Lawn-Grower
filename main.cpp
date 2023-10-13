@@ -53,7 +53,7 @@ Image generatePetalModel(petal_values petal) {
 
     // flood fill center of the petal (between center and top)
     Point centerTop((center.x + top.x) / 2, (center.y + top.y) / 2);
-    petalImage.floodNoRepPixel(petal.color, centerTop);
+    petalImage.floodNoRepColor(petal.color, centerTop);
 
 
     return petalImage;
@@ -68,7 +68,7 @@ Image generatePetalModel(petal_values petal) {
  * @param darkenFactor This new parameter controls how much the colors are darkened or made more opaque when drawing the poppy. A higher darkenFactor will result in darker colors.
  * @param layer This parameter represents the layer on which the poppy will be drawn.
  */
-void drawFlower(Canvas& img, Point pos, double sizeFactor, double darkenFactor, TextureZone layer) {
+void drawPoppyFlower(Canvas& img, Point pos, double sizeFactor, double darkenFactor, TextureZone layer) {
 
     if (darkenFactor > 0.99)
         darkenFactor = 0.99;
@@ -83,10 +83,16 @@ void drawFlower(Canvas& img, Point pos, double sizeFactor, double darkenFactor, 
     // Calculate the radius of the main circle based on sizeFactor
     int circleRadius = img.getScale() * sizeFactor;
 
+    std::vector<Color> petal_color_list;
+
     // Get the colors for the poppy
-    Pixel main_color = getRandomFlowerColor().getDarkened(darkenFactor);
-    Pixel petal_color = getRandomFlowerColorExcept(getFlowerColor(main_color)).getDarkened(darkenFactor);
-    Pixel pistil_color = getRandomFlowerColorExcept(getFlowerColor(main_color)).getDarkened(darkenFactor);
+    Color main_color = getRandomFlowerColor();
+    petal_color_list.push_back(main_color);
+
+    Color petal_color = getRandomFlowerColorExcept(petal_color_list);
+    petal_color_list.push_back(petal_color);
+
+    Color pistil_color = getRandomFlowerColorExcept(petal_color_list);
 
     std::cout << "Drawing Flower (poppy type) with colors: " << main_color << ", " << petal_color << ", " << pistil_color << std::endl;
 
@@ -120,9 +126,9 @@ void drawFlower(Canvas& img, Point pos, double sizeFactor, double darkenFactor, 
     
     for (int x = pos.x - circleRadius; x <= pos.x + circleRadius; x++) {
         for (int y = pos.y - circleRadius; y <= pos.y + circleRadius; y++) {
-            // Check if the pixel is within the circle using the circle equation
+            // Check if the Color is within the circle using the circle equation
             if ((x - pos.x) * (x - pos.x) + (y - pos.y) * (y - pos.y) <= circleRadius * circleRadius) {
-                img.setRepPixel(pistil_color, new Point(x, y));
+                img.setRepColor(pistil_color, new Point(x, y));
             }
         }
     }
@@ -143,7 +149,7 @@ void drawFlowerCrown(Canvas& img, Point pos, double sizeFactor, double darkenFac
     int circleRadius = img.getScale() * sizeFactor / 10;
 
     // Get the colors for the crown
-    Pixel petal_color = getRandomFlowerColor();
+    Color petal_color = getRandomFlowerColor();
 
     // Random petal count
     int petalCount = 6 + rand() % 6;
@@ -262,12 +268,12 @@ Image generatePetaledFlower(petal_values petal_1_values, petal_values petal_2_va
  * 
  * @param img This is a reference to the Canvas object you want to draw on. It's the canvas you'll be modifying.
  * @param layer This parameter represents the layer on which the grass will be drawn.
- * @param color The color of the grass (Pixel object).
+ * @param color The color of the grass (Color object).
  * @param darkenFactor A factor to control the darkness of the grass color (0.0 - 1.0). 0.0 means maximum darkening, 1.0 means no darkening (original color).
  * @param heightFactor A factor to control the maximum height of the grass lines (0.0 - 1.0). 0.0 means very short grass, 1.0 means grass can reach the entire layer height.
  * @param density A factor to control the density of the grass lines (0.0 - 1.0). 0.0 means no grass, 1.0 means maximum density.
  */
-void drawFlatGrass(Canvas& img, TextureZone zone, Pixel color, double darkenFactor, double heightFactor, double density) {
+void drawFlatGrass(Canvas& img, TextureZone zone, Color color, double darkenFactor, double heightFactor, double density) {
 
     if ( darkenFactor > 0.99)
         darkenFactor = 0.99;
@@ -311,11 +317,8 @@ void drawFlatGrass(Canvas& img, TextureZone zone, Pixel color, double darkenFact
 
         // Draw the grass line
         img.drawLine(color.getDarkened(random_darken_factor), pos, Point(pos.x - angle, pos.y + height), thickness);
-    
-        //std::cout << "Drawing grass iteration " << i << " at " << pos << " with height " << height << " and angle " << angle << std::endl;
+   
     }
-
-    //std::cout << "Done drawing grass" << std::endl;
 }
 
 
@@ -357,9 +360,9 @@ int main()
     // Grass
     //----------------------------------------------------------------------------------
     
-    drawFlatGrass(main_canvas, grass_zone, Pixel(0, 200, 0), 0.20, 0.5, 1.0);
-    drawFlatGrass(main_canvas, grass_zone, Pixel(0, 200, 0), 0.50, 0.7, 0.4);
-    drawFlatGrass(main_canvas, grass_zone, Pixel(0, 200, 0), 0.75, 1.0, 0.2);
+    drawFlatGrass(main_canvas, grass_zone, Color(0, 200, 0), 0.20, 0.5, 1.0);
+    drawFlatGrass(main_canvas, grass_zone, Color(0, 200, 0), 0.50, 0.7, 0.4);
+    drawFlatGrass(main_canvas, grass_zone, Color(0, 200, 0), 0.75, 1.0, 0.2);
 
     //----------------------------------------------------------------------------------
     // Flower counts
@@ -392,7 +395,7 @@ int main()
         //Darken factor
         double darkenFactor = 0.5 + (rand() % 100) / 100.0 * 0.5;
 
-        drawFlower(main_canvas, pos, sizeFactor, darkenFactor, poppy_zone);
+        drawPoppyFlower(main_canvas, pos, sizeFactor, darkenFactor, poppy_zone);
     }
 
     //----------------------------------------------------------------------------------
@@ -406,13 +409,17 @@ int main()
         // Random position
         Point pos = poppy_zone.GetRandomAvailablePosition(&main_canvas);
 
-        // Random petal colors
-        Pixel petal_color_1 = getRandomFlowerColor();
-        Pixel petal_color_2 = getRandomFlowerColorExcept(getFlowerColor(petal_color_1));
-        Pixel petal_color_3 = getRandomFlowerColorExcept(getFlowerColor(petal_color_2));
+        // Make a list of the used colors
+        std::vector<Color> petal_color_list;
 
-        //Fill an array
-        Pixel petal_colors[3] = {petal_color_1, petal_color_2, petal_color_3};
+        // Random petal colors
+        Color petal_color_1 = getRandomFlowerColor();
+        petal_color_list.push_back(petal_color_1);
+
+        Color petal_color_2 = getRandomFlowerColorExcept(petal_color_list);
+        petal_color_list.push_back(petal_color_2);
+        
+        Color petal_color_3 = getRandomFlowerColorExcept(petal_color_list);
 
         std::cout  << i + 1 << "/" << petaledCount << " - Drawing Flower (petaled type) with colors: " << petal_color_1 << ", " << petal_color_2 << ", " << petal_color_3 << std::endl;
 
@@ -420,8 +427,6 @@ int main()
         petal_values petal_1_values = {100 + rand() % 100, 40 + rand() % 40, 30 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_1};
         petal_values petal_2_values = {80 + rand() % 100, 20 + rand() % 40, 20 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_2};
         petal_values petal_3_values = {60 + rand() % 100, 10 + rand() % 40, 10 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_3};
-
-        //drawPetaledFlower(main_canvas, pos, petal_1_values, petal_2_values, petal_3_values);
 
         //Run drawPetaledFlower on another thread
         std::thread t1(drawPetaledFlower, std::ref(main_canvas), pos, petal_1_values, petal_2_values, petal_3_values);
@@ -432,7 +437,7 @@ int main()
     // Grass again
     //----------------------------------------------------------------------------------
 
-    //drawFlatGrass(main_canvas, grass_zone, Pixel(0, 200, 0), 0.75, 1.0, 0.05);
+    drawFlatGrass(main_canvas, grass_zone, Color(0, 200, 0), 0.75, 1.0, 0.05);
 
     //----------------------------------------------------------------------------------
     // Other and finalization

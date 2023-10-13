@@ -1,28 +1,23 @@
 #include "FlowerColors.hpp"
 
-#include <map>
-#include <iostream>
-#include <algorithm>
-#include <iterator>
-
 
 /**
- * @brief Dictionary mapping FlowerColors to Pixel
+ * @brief Dictionary mapping FlowerColors to Color
  * 
  */
-std::map<FlowerColors, Pixel> FlowerColorsMap = {
-    {LIGHT_RED, Pixel(232, 75, 44)},
-    {DARK_RED, Pixel(127, 0, 0)},
-    {ORANGE, Pixel(228, 128, 0)},
-    {YELLOW, Pixel(228, 223, 68)},
-    {PINK, Pixel(255, 56, 94)},
-    {WHITE, Pixel(255, 255, 220)},
-    {LIGHT_BLUE, Pixel(40, 230, 255)},
-    {LAVENDER, Pixel(119, 88, 209)},
-    {LIGHT_MAUVE, Pixel(206, 172, 212)},
-    {LIGHT_ORANGE, Pixel(229, 191, 150)},
-    {FLASHY_YELLOW, Pixel(255, 216, 0)},
-    {DARK_PURPLE, Pixel(23, 0, 86)},
+std::map<FlowerColors, Color> FlowerColorsMap = {
+    {LIGHT_RED, Color(232, 75, 44)},
+    {DARK_RED, Color(127, 0, 0)},
+    {ORANGE, Color(228, 128, 0)},
+    {YELLOW, Color(228, 223, 68)},
+    {PINK, Color(255, 56, 94)},
+    {WHITE, Color(255, 255, 220)},
+    {LIGHT_BLUE, Color(40, 230, 255)},
+    {LAVENDER, Color(119, 88, 209)},
+    {LIGHT_MAUVE, Color(206, 172, 212)},
+    {LIGHT_ORANGE, Color(229, 191, 150)},
+    {FLASHY_YELLOW, Color(255, 216, 0)},
+    {DARK_PURPLE, Color(23, 0, 86)},
 };
 
 /**
@@ -38,23 +33,78 @@ void printFlowerColorsMap()
 }
 
 /**
- * @brief Get the Flower Color object
+ * @brief Returns a random FlowerColor
  * 
- * @param color The name of the color, from the FlowerColors enum
- * @return The Pixel object representing the color
+ * @return Color 
  */
-Pixel getFlowerColor(FlowerColors color)
+Color getRandomFlowerColor()
+{
+    int random = rand() % FlowerColorsMap.size();
+    return FlowerColorsMap[static_cast<FlowerColors>(random)];
+}
+
+/**
+ * @brief Returns a random FlowerColor except the given color
+ * 
+ * @param color 
+ * @return Color 
+ */
+Color getRandomFlowerColorExcept(Color color)
+{
+    Color randomColor = getRandomFlowerColor();
+    while (randomColor == color)
+    {
+        randomColor = getRandomFlowerColor();
+    }
+    return randomColor;
+}
+
+/**
+ * @brief Returns a random FlowerColor except the given colors
+ * 
+ * @param colors 
+ * @return Color 
+ */
+Color getRandomFlowerColorExcept(std::vector<Color> colors)
+{
+    Color randomColor = getRandomFlowerColor();
+    bool found = false;
+    while (!found)
+    {
+        for (int i = 0; i < colors.size(); i++)
+        {
+            if (randomColor == colors[i])
+            {
+                randomColor = getRandomFlowerColor();
+                break;
+            }
+            else
+            {
+                found = true;
+            }
+        }
+    }
+    return randomColor;
+}
+
+/**
+ * @brief Returns the Color of the given FlowerColor
+ * 
+ * @param color 
+ * @return Color 
+ */
+Color getFlowerColor(FlowerColors color)
 {
     return FlowerColorsMap[color];
 }
 
 /**
- * @brief Get the Flower Color object
+ * @brief Returns the FlowerColor of the given Color
  * 
- * @param color The Pixel object representing the color
- * @return The FlowerColors enum representing the color
+ * @param color 
+ * @return FlowerColors 
  */
-FlowerColors getFlowerColor(Pixel color)
+FlowerColors getFlowerColor(Color color)
 {
     for (int i = 0; i < FlowerColorsMap.size(); i++)
     {
@@ -63,82 +113,5 @@ FlowerColors getFlowerColor(Pixel color)
             return static_cast<FlowerColors>(i);
         }
     }
-    return LIGHT_RED;
-}
-
-/**
- * @brief Get a Random Flower Color object
- * 
- * @return The Pixel object representing the color
- */
-Pixel getRandomFlowerColor()
-{
-    // Get map length
-    int length = FlowerColorsMap.size();
-    int random = rand() % length;
-    return FlowerColorsMap[static_cast<FlowerColors>(random)];
-}
-
-/**
- * @brief Get a Random Flower Color Except the provided color
- * 
- * @param color The color to exclude from the random selection
- * @return The Pixel object representing the color
- */
-Pixel getRandomFlowerColorExcept(FlowerColors color)
-{
-    // Get map length
-    int length = FlowerColorsMap.size();
-    int random = rand() % length;
-    while (static_cast<FlowerColors>(random) == color)
-    {
-        random = rand() % length;
-    }
-    return FlowerColorsMap[static_cast<FlowerColors>(random)];
-}
-
-/**
- * @brief Get a Random Flower Color Except the provided colors
- * 
- * @param colors The colors to exclude from the random selection
- * @return The Pixel object representing the color
- */
-Pixel getRandomFlowerColorExcept(FlowerColors colors[])
-{
-    // Get map length
-    int length = FlowerColorsMap.size();
-    int random = rand() % length;
-
-    std::cout << "Random: " << random << " out of " << length << std::endl;
-
-    // Get a random color
-    Pixel randomColor = FlowerColorsMap[static_cast<FlowerColors>(random)];
-
-    std::cout << "Random Color: " << randomColor << std::endl; 
-
-    // Check if the random color is in the colors array
-    bool wip = true;
-
-    while (wip)
-    {
-        // Check if the random color is in the colors array
-        for (int i = 0; i < FlowerColorsMap.size(); i++)
-        {
-            if (randomColor == FlowerColorsMap[colors[i]])
-            {
-                // Get a new random color
-                random = rand() % length;
-                randomColor = FlowerColorsMap[static_cast<FlowerColors>(random)];
-                break;
-            }
-            else if (i == FlowerColorsMap.size() - 1)
-            {
-                // The random color is not in the colors array
-                wip = false;
-            }
-        }
-    }
-    
-    return randomColor;
-    
+    return static_cast<FlowerColors>(-1);
 }

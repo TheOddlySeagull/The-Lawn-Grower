@@ -21,10 +21,10 @@ bool Image::isPointInImage(Point pos)
     return false;
 }
 
-void Image::floodRepPixelHelper(Pixel filler, Pixel replaced, Point pos, std::vector<Point> &visited)
+void Image::floodRepColorHelper(Color filler, Color replaced, Point pos, std::vector<Point> &visited)
 {
     pos.insureWithinBounds(width, height);
-    //std::cout << "floodRepPixelHelper pos: " << pos << std::endl;
+    //std::cout << "floodRepColorHelper pos: " << pos << std::endl;
     // If current point is not in visited
     for (int i = 0; i < visited.size(); i++) {
         if (visited[i] == pos) {
@@ -36,9 +36,9 @@ void Image::floodRepPixelHelper(Pixel filler, Pixel replaced, Point pos, std::ve
     visited.push_back(pos);
 
     // if current point is replaced
-    if (pixels[pos.y * width + pos.x] == replaced) {
+    if (Colors[pos.y * width + pos.x] == replaced) {
         // replace current point with filler
-        pixels[pos.y * width + pos.x] = filler;
+        Colors[pos.y * width + pos.x] = filler;
 
         Point north = Point(pos.x, pos.y + 1);
         Point east = Point(pos.x + 1, pos.y);
@@ -50,11 +50,11 @@ void Image::floodRepPixelHelper(Pixel filler, Pixel replaced, Point pos, std::ve
         makePointRep(&south);
         makePointRep(&west);
 
-        // For all 4 adjascent pixels
-        floodRepPixelHelper(filler, replaced, north, visited);
-        floodRepPixelHelper(filler, replaced, east, visited);
-        floodRepPixelHelper(filler, replaced, south, visited);
-        floodRepPixelHelper(filler, replaced, west, visited);
+        // For all 4 adjascent Colors
+        floodRepColorHelper(filler, replaced, north, visited);
+        floodRepColorHelper(filler, replaced, east, visited);
+        floodRepColorHelper(filler, replaced, south, visited);
+        floodRepColorHelper(filler, replaced, west, visited);
     }
 }
 
@@ -64,14 +64,14 @@ Image::Image()
 {
     width = 0;
     height = 0;
-    pixels = new Pixel[width * height];
+    Colors = new Color[width * height];
 }
 
 Image::Image(int w, int h)
 {
     width = w;
     height = h;
-    pixels = new Pixel[width * height];
+    Colors = new Color[width * height];
     //std::cout << "Image created with width " << width << " and height " << height << std::endl;
 }
 
@@ -79,15 +79,15 @@ Image::Image(const Image &other)
 {
     width = other.width;
     height = other.height;
-    pixels = new Pixel[width * height];
+    Colors = new Color[width * height];
     for (int i = 0; i < width * height; i++) {
-        pixels[i] = other.pixels[i];
+        Colors[i] = other.Colors[i];
     }
 }
 
 Image::~Image()
 {
-    delete[] pixels;
+    delete[] Colors;
 }
 
 // Getters
@@ -101,61 +101,61 @@ int Image::getHeight() const
     return height;
 }
 
-// Pixel Getters
-Pixel Image::getPixels() const
+// Color Getters
+Color Image::getColors() const
 {
-    return *pixels;
+    return *Colors;
 }
 
-Pixel Image::getPixel(Point pos) const
+Color Image::getColor(Point pos) const
 {
-    return pixels[pos.y * width + pos.x];
+    return Colors[pos.y * width + pos.x];
 }
 
-Pixel Image::getPixel(int w, int h) const
+Color Image::getColor(int w, int h) const
 {
-    return pixels[h * width + w];
+    return Colors[h * width + w];
 }
 
-// Pixel Methods
-void Image::setRepPixel(Pixel p, Point* pos)
+// Color Methods
+void Image::setRepColor(Color p, Point* pos)
 {
     makePointRep(pos);
 
-    // Set pixel at pos to p
-    pixels[pos->y * width + pos->x] = p;
+    // Set Color at pos to p
+    Colors[pos->y * width + pos->x] = p;
 }
 
-void Image::setNoRepPixel(Pixel p, Point pos)
+void Image::setNoRepColor(Color p, Point pos)
 {
     if (isPointInImage(pos)) {
-        // Set pixel at pos to p
-        pixels[pos.y * width + pos.x] = p;
+        // Set Color at pos to p
+        Colors[pos.y * width + pos.x] = p;
     }
 }
 
-void Image::replaceRepPixel(Pixel replacement, Pixel replaced, Point* pos)
+void Image::replaceRepColor(Color replacement, Color replaced, Point* pos)
 {
     makePointRep(pos);
-    // Replace pixel at pos with replacement if it is replaced
-    if (pixels[pos->y * width + pos->x] == replaced) {
-        pixels[pos->y * width + pos->x] = replacement;
+    // Replace Color at pos with replacement if it is replaced
+    if (Colors[pos->y * width + pos->x] == replaced) {
+        Colors[pos->y * width + pos->x] = replacement;
     }
 }
 
-void Image::replaceNoRepPixel(Pixel replacement, Pixel replaced, Point pos)
+void Image::replaceNoRepColor(Color replacement, Color replaced, Point pos)
 {
     if (isPointInImage(pos)) {
-        // Replace pixel at pos with replacement if it is replaced
-        if (pixels[pos.y * width + pos.x] == replaced) {
-            pixels[pos.y * width + pos.x] = replacement;
+        // Replace Color at pos with replacement if it is replaced
+        if (Colors[pos.y * width + pos.x] == replaced) {
+            Colors[pos.y * width + pos.x] = replacement;
         }
     }
 }
 
-void Image::oldFloodRepPixel(Pixel filler, Point pos)
+void Image::oldFloodRepColor(Color filler, Point pos)
 {
-    // Define all 4 adjascent pixels
+    // Define all 4 adjascent Colors
     Point north = Point(pos.x, pos.y + 1);
     Point east = Point(pos.x + 1, pos.y);
     Point south = Point(pos.x, pos.y - 1);
@@ -168,23 +168,23 @@ void Image::oldFloodRepPixel(Pixel filler, Point pos)
 
     exportImage("test.bmp", 1, 1);
 
-    // Flood fill pixel at pos with filler
-    Pixel replaced = pixels[pos.y * width + pos.x];
-    pixels[pos.y * width + pos.x] = filler;
+    // Flood fill Color at pos with filler
+    Color replaced = Colors[pos.y * width + pos.x];
+    Colors[pos.y * width + pos.x] = filler;
 
-    if (getPixel(north) == replaced) {
+    if (getColor(north) == replaced) {
         std::cout << "north: " << north << std::endl;
-        floodRepPixel(filler, north);
+        floodRepColor(filler, north);
     }
-    if (getPixel(east) == replaced) {
-        floodRepPixel(filler, east);
+    if (getColor(east) == replaced) {
+        floodRepColor(filler, east);
         std::cout << "east: " << east << std::endl;
     }
 }
 
-void Image::floodRepPixel(Pixel filler, Point pos)
+void Image::floodRepColor(Color filler, Point pos)
 {
-    // Make an array of visited pixels
+    // Make an array of visited Colors
     std::vector<Point> visited;
 
     Point north = Point(pos.x, pos.y + 1);
@@ -197,32 +197,32 @@ void Image::floodRepPixel(Pixel filler, Point pos)
     makePointRep(&south);
     makePointRep(&west);
 
-    // for all 4 adjascent pixels
-    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], north, visited);
-    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], east, visited);
-    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], south, visited);
-    floodRepPixelHelper(filler, pixels[pos.y * width + pos.x], west, visited);
+    // for all 4 adjascent Colors
+    floodRepColorHelper(filler, Colors[pos.y * width + pos.x], north, visited);
+    floodRepColorHelper(filler, Colors[pos.y * width + pos.x], east, visited);
+    floodRepColorHelper(filler, Colors[pos.y * width + pos.x], south, visited);
+    floodRepColorHelper(filler, Colors[pos.y * width + pos.x], west, visited);
 
 }
 
-void Image::floodNoRepPixel(Pixel filler, Point pos)
+void Image::floodNoRepColor(Color filler, Point pos)
 {
     if (pos.x >= 0 || pos.x < width || pos.y >= 0 || pos.y < height) {
-        // Flood fill pixel at pos with filler
-        Pixel replaced = pixels[pos.y * width + pos.x];
-        pixels[pos.y * width + pos.x] = filler;
+        // Flood fill Color at pos with filler
+        Color replaced = Colors[pos.y * width + pos.x];
+        Colors[pos.y * width + pos.x] = filler;
 
-        if (pos.x + 1 < width && pixels[pos.y * width + pos.x + 1] == replaced) {
-            floodNoRepPixel(filler, Point(pos.x + 1, pos.y));
+        if (pos.x + 1 < width && Colors[pos.y * width + pos.x + 1] == replaced) {
+            floodNoRepColor(filler, Point(pos.x + 1, pos.y));
         }
-        if (pos.x - 1 >= 0 && pixels[pos.y * width + pos.x - 1] == replaced) {
-            floodNoRepPixel(filler, Point(pos.x - 1, pos.y));
+        if (pos.x - 1 >= 0 && Colors[pos.y * width + pos.x - 1] == replaced) {
+            floodNoRepColor(filler, Point(pos.x - 1, pos.y));
         }
-        if (pos.y + 1 < height && pixels[(pos.y + 1) * width + pos.x] == replaced) {
-            floodNoRepPixel(filler, Point(pos.x, pos.y + 1));
+        if (pos.y + 1 < height && Colors[(pos.y + 1) * width + pos.x] == replaced) {
+            floodNoRepColor(filler, Point(pos.x, pos.y + 1));
         }
-        if (pos.y - 1 >= 0 && pixels[(pos.y - 1) * width + pos.x] == replaced) {
-            floodNoRepPixel(filler, Point(pos.x, pos.y - 1));
+        if (pos.y - 1 >= 0 && Colors[(pos.y - 1) * width + pos.x] == replaced) {
+            floodNoRepColor(filler, Point(pos.x, pos.y - 1));
         }
     }
 }
@@ -254,7 +254,7 @@ void Image::exportImage(std::string filename, int width_repititions, int height_
         newWidth & 0xFF, (newWidth >> 8) & 0xFF, (newWidth >> 16) & 0xFF, (newWidth >> 24) & 0xFF, // Image width
         newHeight & 0xFF, (newHeight >> 8) & 0xFF, (newHeight >> 16) & 0xFF, (newHeight >> 24) & 0xFF, // Image height
         1, 0, // Number of color planes (1)
-        24, 0, // Bits per pixel (24-bit)
+        24, 0, // Bits per Color (24-bit)
         0, 0, 0, 0, // Compression (none)
         0, 0, 0, 0, // Image size (none)
         0, 0, 0, 0, // Horizontal resolution (none)
@@ -270,11 +270,11 @@ void Image::exportImage(std::string filename, int width_repititions, int height_
         for (int h = height - 1; h > -1; h--) {
             for (int w_rep = 0; w_rep < width_repititions; w_rep++) {
                 for (int w = 0; w < width; w++) {
-                    Pixel& pixel = pixels[h * width + w];
-                    // Write the pixel color data (BGR order for BMP)
-                    outputFile.put(pixel.getBlue());
-                    outputFile.put(pixel.getGreen());
-                    outputFile.put(pixel.getRed());
+                    Color& Color = Colors[h * width + w];
+                    // Write the Color color data (BGR order for BMP)
+                    outputFile.put(Color.getBlue());
+                    outputFile.put(Color.getGreen());
+                    outputFile.put(Color.getRed());
                 }
             }
         }
@@ -293,7 +293,7 @@ void Image::printImageConsole()
         {
             try
             {
-                std::cout << "\033[48;2;" << pixels[h * width + w].getRed() << ";" << pixels[h * width + w].getGreen() << ";" << pixels[h * width + w].getBlue() << "m  \033[0m";
+                std::cout << "\033[48;2;" << Colors[h * width + w].getRed() << ";" << Colors[h * width + w].getGreen() << ";" << Colors[h * width + w].getBlue() << "m  \033[0m";
             }
             catch (const std::exception& e)
             {
@@ -307,24 +307,24 @@ void Image::printImageConsole()
 
 // Color and noise
 void Image::colorFilter(float amount) {
-    // Iterate through the pixels of the current image
+    // Iterate through the Colors of the current image
     for (int w = 0; w < width; w++) {
         for (int h = 0; h < height; h++) {
             Point pos(w, h);
-            Pixel pixel = getPixel(pos);
+            Color color = getColor(pos);
 
             // Calculate the new color components
-            int newRed = static_cast<int>(pixel.getRed() * amount);
-            int newGreen = static_cast<int>(pixel.getGreen() * amount);
-            int newBlue = static_cast<int>(pixel.getBlue() * amount);
+            int newRed = static_cast<int>(color.getRed() * amount);
+            int newGreen = static_cast<int>(color.getGreen() * amount);
+            int newBlue = static_cast<int>(color.getBlue() * amount);
 
             // Make sure the new color components are within bounds
             newRed = std::min(std::max(newRed, 0), 255);
             newGreen = std::min(std::max(newGreen, 0), 255);
             newBlue = std::min(std::max(newBlue, 0), 255);
 
-            // Update the pixel color
-            setRepPixel(Pixel(newRed, newGreen, newBlue), &pos);
+            // Update the Color color
+            setRepColor(Color(newRed, newGreen, newBlue), &pos);
         }
     }
 }
@@ -339,24 +339,24 @@ void Image::addNoise(double noiseDensity, int noiseSpread, int noiseColorfulness
 
     for (int x = 0; x < width; x++) {
         for (int y = 0; y < height; y++) {
-            Pixel& pixel = pixels[y * width + x];
-            if (pixel.getRed() + pixel.getGreen() + pixel.getBlue() > 0 && dis(gen) < noiseDensity) {
+            Color& Color = Colors[y * width + x];
+            if (Color.getRed() + Color.getGreen() + Color.getBlue() > 0 && dis(gen) < noiseDensity) {
 
                 // Random value between -noiseSpread and +noiseSpread
                 int radius = rand() % (2 * noiseSpread) - noiseSpread;
 
-                int noiseR = pixel.getRed() + radius + (rand() % (2 * noiseColorfulness) - noiseColorfulness);
-                int noiseG = pixel.getGreen() + radius + (rand() % (2 * noiseColorfulness) - noiseColorfulness);
-                int noiseB = pixel.getBlue() + radius + (rand() % (2 * noiseColorfulness) - noiseColorfulness);
+                int noiseR = Color.getRed() + radius + (rand() % (2 * noiseColorfulness) - noiseColorfulness);
+                int noiseG = Color.getGreen() + radius + (rand() % (2 * noiseColorfulness) - noiseColorfulness);
+                int noiseB = Color.getBlue() + radius + (rand() % (2 * noiseColorfulness) - noiseColorfulness);
 
                 // Ensure that the noise values do not exceed the specified saturation
                 noiseR = std::min(std::max(noiseR, 0), noiseSaturation);
                 noiseG = std::min(std::max(noiseG, 0), noiseSaturation);
                 noiseB = std::min(std::max(noiseB, 0), noiseSaturation);
 
-                pixel.setRed(noiseR);
-                pixel.setGreen(noiseG);
-                pixel.setBlue(noiseB);
+                Color.setRed(noiseR);
+                Color.setGreen(noiseG);
+                Color.setBlue(noiseB);
             }
         }
     }
@@ -364,7 +364,7 @@ void Image::addNoise(double noiseDensity, int noiseSpread, int noiseColorfulness
 
 
 // Drawing
-void Image::drawLine(Pixel color, Point p1, Point p2, int thickness) {
+void Image::drawLine(Color color, Point p1, Point p2, int thickness) {
 
     int dx = abs(p2.x - p1.x);
     int dy = abs(p2.y - p1.y);
@@ -376,17 +376,17 @@ void Image::drawLine(Pixel color, Point p1, Point p2, int thickness) {
     makePointRep(&p2);
     
     while (true) {
-        // Draw the central pixel
-        setRepPixel(color, &p1);
+        // Draw the central Color
+        setRepColor(color, &p1);
 
-        // Draw additional pixels for thickness
+        // Draw additional Colors for thickness
         for (int t = 1; t <= thickness; t++) {
             int xt = p1.x + t * sx;
             int yt = p1.y + t * sy;
 
             Point pos(xt, yt);
 
-            setRepPixel(color, &pos);
+            setRepColor(color, &pos);
         }
 
         if (p1.x == p2.x && p1.y == p2.y) {
@@ -405,7 +405,7 @@ void Image::drawLine(Pixel color, Point p1, Point p2, int thickness) {
     }
 }
 
-void Image::drawCurve(Pixel color, Point p1, Point p2, int offset) {
+void Image::drawCurve(Color color, Point p1, Point p2, int offset) {
     // Calculate the direction vector of the line from p1 to p2
     double dx = p2.x - p1.x;
     double dy = p2.y - p1.y;
@@ -439,12 +439,12 @@ void Image::drawCurve(Pixel color, Point p1, Point p2, int offset) {
         // Create a point from the calculated coordinates
         Point pos(static_cast<int>(x), static_cast<int>(y));
 
-        // Draw the point using setRepPixel
-        setRepPixel(color, &pos);
+        // Draw the point using setRepColor
+        setRepColor(color, &pos);
     }
 }
 
-void Image::drawCircle(Pixel color, Point center, int radius) {
+void Image::drawCircle(Color color, Point center, int radius) {
     int x = radius;
     int y = 0;
     int radiusError = 1 - x;
@@ -454,18 +454,18 @@ void Image::drawCircle(Pixel color, Point center, int radius) {
         for (int i = center.x - x; i <= center.x + x; i++) {
 
             Point pos(i, center.y + y);
-            setRepPixel(color, &pos);
+            setRepColor(color, &pos);
             pos.y = center.y - y;
-            setRepPixel(color, &pos);
+            setRepColor(color, &pos);
         }
 
         // Draw vertical scanlines
         for (int i = center.x - y; i <= center.x + y; i++) {
 
             Point pos(i, center.y + x);
-            setRepPixel(color, &pos);
+            setRepColor(color, &pos);
             pos.y = center.y - x;
-            setRepPixel(color, &pos);
+            setRepColor(color, &pos);
         }
 
         y++;
@@ -479,7 +479,7 @@ void Image::drawCircle(Pixel color, Point center, int radius) {
     }
 }
 
-void Image::drawPartialEmptyCircle(int radius, double startAngle, double endAngle, Point center, Pixel color) {
+void Image::drawPartialEmptyCircle(int radius, double startAngle, double endAngle, Point center, Color color) {
     // Ensure that startAngle and endAngle are within the range [0, 360]
     startAngle = fmod(startAngle, 360.0);
     endAngle = fmod(endAngle, 360.0);
@@ -493,14 +493,14 @@ void Image::drawPartialEmptyCircle(int radius, double startAngle, double endAngl
         int x = static_cast<int>(center.x + radius * cos(angle));
         int y = static_cast<int>(center.y + radius * sin(angle));
 
-        // Make sure the calculated pixel coordinates are within the image bounds
+        // Make sure the calculated Color coordinates are within the image bounds
         if (x >= 0 && x < getWidth() && y >= 0 && y < getHeight()) {
-            setRepPixel(color, new Point(x, y));
+            setRepColor(color, new Point(x, y));
         }
     }
 }
 
-void Image::drawPartialCheeseWheel(int radius, double startAngle, double endAngle, Point center, Pixel color) {
+void Image::drawPartialCheeseWheel(int radius, double startAngle, double endAngle, Point center, Color color) {
     // Value adaptation for this function
     if (startAngle < 0 || endAngle < 0 || startAngle > 360 || endAngle > 360) {
         std::cout << "Invalid angle detected, dividing to 2 itterations." << std::endl;
@@ -542,31 +542,31 @@ void Image::drawPartialCheeseWheel(int radius, double startAngle, double endAngl
     int yMin = center.y - radius;
     int yMax = center.y + radius;
 
-    // Loop through the bounding box and check each pixel if it's inside the partial circle
+    // Loop through the bounding box and check each Color if it's inside the partial circle
     for (int x = xMin; x <= xMax; x++) {
         for (int y = yMin; y <= yMax; y++) {
-            // Calculate the angle of the current pixel relative to the circle's center
-            double pixelAngle = atan2(y - center.y, x - center.x) * (180.0 / M_PI);
+            // Calculate the angle of the current Color relative to the circle's center
+            double ColorAngle = atan2(y - center.y, x - center.x) * (180.0 / M_PI);
 
-            // Ensure pixelAngle is within [0, 360] degrees
-            pixelAngle = (pixelAngle < 0) ? pixelAngle + 360.0 : pixelAngle;
+            // Ensure ColorAngle is within [0, 360] degrees
+            ColorAngle = (ColorAngle < 0) ? ColorAngle + 360.0 : ColorAngle;
 
-            // Check if the pixel is within the specified angle range
-            if (pixelAngle >= startAngle && pixelAngle <= endAngle) {
-                // Calculate the distance from the center of the circle to the current pixel
+            // Check if the Color is within the specified angle range
+            if (ColorAngle >= startAngle && ColorAngle <= endAngle) {
+                // Calculate the distance from the center of the circle to the current Color
                 double distance = sqrt(pow(x - center.x, 2) + pow(y - center.y, 2));
 
-                // Check if the pixel is within the circle's radius
+                // Check if the Color is within the circle's radius
                 if (distance <= radius) {
-                    // Set the pixel color
-                    setRepPixel(color, new Point(x, y));
+                    // Set the Color color
+                    setRepColor(color, new Point(x, y));
                 }
             }
         }
     }
 }
 
-void Image::drawFilledCircleWithBorder(int radius, Point center, Pixel fillColor, Pixel borderColor) {
+void Image::drawFilledCircleWithBorder(int radius, Point center, Color fillColor, Color borderColor) {
     // Draw the filled circle with the fillColor
     drawCircle(fillColor, center, radius);
 
@@ -587,16 +587,16 @@ void Image::rotate(float angleDegrees) {
     int newWidth = static_cast<int>(abs(width * cos(angleRadians)) + abs(height * sin(angleRadians)));
     int newHeight = static_cast<int>(abs(width * sin(angleRadians)) + abs(height * cos(angleRadians)));
 
-    // Create a new image buffer for the rotated image and fill it with black pixels
-    Pixel* rotatedPixels = new Pixel[newWidth * newHeight];
+    // Create a new image buffer for the rotated image and fill it with black Colors
+    Color* rotatedColors = new Color[newWidth * newHeight];
     for (int i = 0; i < newWidth * newHeight; i++) {
-        rotatedPixels[i] = Pixel(0, 0, 0); // Black pixel
+        rotatedColors[i] = Color(0, 0, 0); // Black Color
     }
 
     // Calculate the center point of the original image
     Point center(static_cast<int>(width / 2), static_cast<int>(height / 2));
 
-    // Iterate over each pixel in the rotated image
+    // Iterate over each Color in the rotated image
     for (int y = 0; y < newHeight; y++) {
         for (int x = 0; x < newWidth; x++) {
             // Calculate the corresponding position in the original image
@@ -609,16 +609,16 @@ void Image::rotate(float angleDegrees) {
             // Check if the original coordinates are within bounds
             if (originalX >= 0 && originalX < width && originalY >= 0 && originalY < height) {
                 // Copy the color from the original image to the rotated image
-                rotatedPixels[y * newWidth + x] = getPixel(Point(static_cast<int>(originalX), static_cast<int>(originalY)));
+                rotatedColors[y * newWidth + x] = getColor(Point(static_cast<int>(originalX), static_cast<int>(originalY)));
             }
         }
     }
 
-    // Update the image dimensions and pixel buffer
+    // Update the image dimensions and Color buffer
     width = newWidth;
     height = newHeight;
-    delete[] pixels;
-    pixels = rotatedPixels;
+    delete[] Colors;
+    Colors = rotatedColors;
 }
 
 // Trimming
@@ -628,10 +628,10 @@ void Image::trim(int newWidth, int newHeight) {
         return;
     }
 
-    // Create a new image buffer for the trimmed image and fill it with black pixels
-    Pixel* trimmedPixels = new Pixel[newWidth * newHeight];
+    // Create a new image buffer for the trimmed image and fill it with black Colors
+    Color* trimmedColors = new Color[newWidth * newHeight];
     for (int i = 0; i < newWidth * newHeight; i++) {
-        trimmedPixels[i] = Pixel(0, 0, 0); // Black pixel
+        trimmedColors[i] = Color(0, 0, 0); // Black Color
     }
 
     // Find the size difference between the original image and the trimmed image
@@ -646,24 +646,24 @@ void Image::trim(int newWidth, int newHeight) {
     int nwStartX = static_cast<int>(newWidth / 2);
     int nwStartY = static_cast<int>(newHeight / 2);
 
-    // Copy the pixels from the original image to the trimmed image
+    // Copy the Colors from the original image to the trimmed image
     for (int w = 0; w < newWidth; w++) {
         for (int h = 0; h < newHeight; h++) {
             int orX = orStartX + w - nwStartX;
             int orY = orStartY + h - nwStartY;
 
-            //If the pixel is within the bounds of the new image, copy it
+            //If the Color is within the bounds of the new image, copy it
             if (orX >= 0 && orX < width && orY >= 0 && orY < height) {
-                trimmedPixels[h * newWidth + w] = getPixel(Point(orX, orY));
+                trimmedColors[h * newWidth + w] = getColor(Point(orX, orY));
             }
         }
     }
 
-    // Update the image dimensions and pixel buffer
+    // Update the image dimensions and Color buffer
     width = newWidth;
     height = newHeight;
-    delete[] pixels;
-    pixels = trimmedPixels;
+    delete[] Colors;
+    Colors = trimmedColors;
 }
 
 
@@ -698,7 +698,7 @@ void Image::resize(int new_width, int new_height) {
             double srcX = x * xScale;
             double srcY = y * yScale;
 
-            // Calculate the coordinates of the surrounding pixels in the original image
+            // Calculate the coordinates of the surrounding Colors in the original image
             int x1 = static_cast<int>(srcX);
             int x2 = std::min(x1 + 1, width - 1);
             int y1 = static_cast<int>(srcY);
@@ -708,27 +708,28 @@ void Image::resize(int new_width, int new_height) {
             double xWeight = srcX - x1;
             double yWeight = srcY - y1;
 
-            // Perform bilinear interpolation to calculate the pixel color
-            Pixel interpolatedPixel = getPixel(x1, y1) * ((1 - xWeight) * (1 - yWeight)) +
-                                      getPixel(x2, y1) * (xWeight * (1 - yWeight)) +
-                                      getPixel(x1, y2) * ((1 - xWeight) * yWeight) +
-                                      getPixel(x2, y2) * (xWeight * yWeight);
+            // Perform bilinear interpolation to calculate the Color color
+            Color interpolatedColor = 
+                getColor(x1, y1) * (1 - xWeight) * (1 - yWeight) +
+                getColor(x2, y1) * xWeight * (1 - yWeight) +
+                getColor(x1, y2) * (1 - xWeight) * yWeight +
+                getColor(x2, y2) * xWeight * yWeight;
 
-            // Set the pixel in the resized image
+            // Set the Color in the resized image
             Point pos(x, y);
-            resizedImage.setRepPixel(interpolatedPixel, &pos);
+            resizedImage.setRepColor(interpolatedColor, &pos);
         }
     }
 
     // Replace the current image with the resized image
     width = new_width;
     height = new_height;
-    delete[] pixels;
-    pixels = new Pixel[width * height];
+    delete[] Colors;
+    Colors = new Color[width * height];
 
-    // Copy the pixels from the resized image to the current image
+    // Copy the Colors from the resized image to the current image
     for (int i = 0; i < width * height; i++) {
-        pixels[i] = resizedImage.pixels[i];
+        Colors[i] = resizedImage.Colors[i];
     }
 }
 
@@ -745,15 +746,15 @@ void Image::merge(const Image &other) {
         return;
     }
 
-    // Iterate through the pixels of the parameter image
+    // Iterate through the Colors of the parameter image
     for (int w = 0; w < width; w++) {
         for (int h = 0; h < height; h++) {
             Point pos(w, h);
-            Pixel pixel = other.getPixel(pos);
+            Color Color = other.getColor(pos);
 
-            // Only merge non-black pixels
-            if (pixel != Pixel(0, 0, 0)) {
-                setRepPixel(pixel, &pos);
+            // Only merge non-black Colors
+            if (!Color.isBlack()) {
+                setRepColor(Color, &pos);
             }
         }
     }
@@ -768,16 +769,16 @@ void Image::merge(const Image &other, Point pos) {
         return;
     }
 
-    // Iterate through the pixels of the parameter image
+    // Iterate through the Colors of the parameter image
     for (int w = 0; w < other.width; w++) {
         for (int h = 0; h < other.height; h++) {
             Point otherPos(w, h);
-            Pixel pixel = other.getPixel(otherPos);
+            Color Color = other.getColor(otherPos);
 
-            // Only merge non-black pixels
-            if (pixel != Pixel(0, 0, 0)) {
+            // Only merge non-black Colors
+            if (!Color.isBlack()) {
                 Point newPos = pos + otherPos;
-                setRepPixel(pixel, &newPos);
+                setRepColor(Color, &newPos);
             }
         }
     }
@@ -792,15 +793,15 @@ void Image::mergeExcept(const Image &other, const Image &except) {
         return;
     }
 
-    // Iterate through the pixels of the parameter image
+    // Iterate through the Colors of the parameter image
     for (int w = 0; w < other.width; w++) {
         for (int h = 0; h < other.height; h++) {
 
-            // Check if the pixel is black in the except image
-            if (except.getPixel(Point(w, h)) == Pixel(0, 0, 0) && other.getPixel(Point(w, h)) != Pixel(0, 0, 0)) {
+            // Check if the Color is black in the except image
+            if (except.getColor(Point(w, h)) == Color(0, 0, 0) && other.getColor(Point(w, h)) != Color(0, 0, 0)) {
                 Point pos(w, h);
-                Pixel pixel = other.getPixel(pos);
-                setNoRepPixel(pixel, pos);
+                Color Color = other.getColor(pos);
+                setNoRepColor(Color, pos);
             }
         }
     }
@@ -815,16 +816,16 @@ void Image::mergeExcept(const Image &other, const Image &except, Point pos) {
         return;
     }
 
-    // Iterate through the pixels of the parameter image
+    // Iterate through the Colors of the parameter image
     for (int w = 0; w < other.width; w++) {
         for (int h = 0; h < other.height; h++) {
 
-            // Check if the pixel is black in the except image
-            if (except.getPixel(Point(w, h)) == Pixel(0, 0, 0) && other.getPixel(Point(w, h)) != Pixel(0, 0, 0)) {
+            // Check if the Color is black in the except image
+            if (except.getColor(Point(w, h)) == Color(0, 0, 0) && other.getColor(Point(w, h)) != Color(0, 0, 0)) {
                 Point otherPos(w, h);
-                Pixel pixel = other.getPixel(otherPos);
+                Color Color = other.getColor(otherPos);
                 Point newPos = pos + otherPos;
-                setNoRepPixel(pixel, newPos);
+                setNoRepColor(Color, newPos);
             }
         }
     }
@@ -832,15 +833,15 @@ void Image::mergeExcept(const Image &other, const Image &except, Point pos) {
 
 void Image::mergeLayerRep(const Image &other, Point pos) {
 
-    // Iterate through the pixels of the parameter image
+    // Iterate through the Colors of the parameter image
     for (int w = 0; w < other.width; w++) {
         for (int h = 0; h < other.height; h++) {
             Point otherPos(w, h);
             Point newPos = pos + otherPos;
 
-            //If pixel is not black
-            if (other.getPixel(otherPos) != Pixel(0, 0, 0)) {
-                setRepPixel(other.getPixel(otherPos), &newPos);
+            //If Color is not black
+            if (other.getColor(otherPos) != Color(0, 0, 0)) {
+                setRepColor(other.getColor(otherPos), &newPos);
             }
         }
     }
@@ -848,12 +849,12 @@ void Image::mergeLayerRep(const Image &other, Point pos) {
 
 void Image::mergeLayerNoRep(const Image &other, Point pos) {
 
-    // Iterate through the pixels of the parameter image
+    // Iterate through the Colors of the parameter image
     for (int w = 0; w < other.width; w++) {
         for (int h = 0; h < other.height; h++) {
             Point otherPos(w, h);
 
-            setNoRepPixel(other.getPixel(otherPos), pos + otherPos);
+            setNoRepColor(other.getColor(otherPos), pos + otherPos);
         }
     }
 }
@@ -863,35 +864,35 @@ void Image::expand(const Image &other) {
     int newWidth = width + other.width;
     int newHeight = std::max(height, other.height);
 
-    // Create a new image buffer for the expanded image and fill it with black pixels
-    Pixel* expandedPixels = new Pixel[newWidth * newHeight];
+    // Create a new image buffer for the expanded image and fill it with black Colors
+    Color* expandedColors = new Color[newWidth * newHeight];
     for (int i = 0; i < newWidth * newHeight; i++) {
-        expandedPixels[i] = Pixel(0, 0, 0); // Black pixel
+        expandedColors[i] = Color(0, 0, 0); // Black Color
     }
 
-    // Copy the pixels from the current image to the expanded image
+    // Copy the Colors from the current image to the expanded image
     for (int w = 0; w < width; w++) {
         for (int h = 0; h < height; h++) {
             Point pos(w, h);
-            Pixel pixel = getPixel(pos);
-            expandedPixels[h * newWidth + w] = pixel;
+            Color Color = getColor(pos);
+            expandedColors[h * newWidth + w] = Color;
         }
     }
 
-    // Copy the pixels from the parameter image to the expanded image
+    // Copy the Colors from the parameter image to the expanded image
     for (int w = 0; w < other.width; w++) {
         for (int h = 0; h < other.height; h++) {
             Point pos(w, h);
-            Pixel pixel = other.getPixel(pos);
-            expandedPixels[h * newWidth + w + width] = pixel;
+            Color Color = other.getColor(pos);
+            expandedColors[h * newWidth + w + width] = Color;
         }
     }
 
-    // Update the image dimensions and pixel buffer
+    // Update the image dimensions and Color buffer
     width = newWidth;
     height = newHeight;
-    delete[] pixels;
-    pixels = expandedPixels;
+    delete[] Colors;
+    Colors = expandedColors;
 }
 
 // Operators
