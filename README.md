@@ -15,7 +15,7 @@ The compilation will generate a binary file in a build directory that you can ru
 
 The program will then fill up the console with information such as how many grass blades are generated, how many flowers, their colors, etc.
 
-The output image will be generated in the build directory as "output.bmp".
+The output image will be generated in the build directory as "generated_lawn.bmp".
 
 ## Flower Types
 
