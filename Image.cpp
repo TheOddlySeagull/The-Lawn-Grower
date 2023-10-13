@@ -229,6 +229,7 @@ void Image::floodNoRepColor(Color filler, Point pos)
 
 // Image Methods
 void Image::exportImage(std::string filename, int width_repititions, int height_repititions) {
+
     // Open the output file for writing
     std::ofstream outputFile(filename, std::ios::binary);
 

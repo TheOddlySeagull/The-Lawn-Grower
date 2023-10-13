@@ -449,7 +449,7 @@ int main()
     std::cout << "Exporting images" << std::endl;
 
     // Export the image
-    main_canvas.exportImage("output.bmp", 1, 1);
+    main_canvas.exportImage("generated_lawn.bmp", 1, 1);
 
     std::cout << "Done" << std::endl;
 
