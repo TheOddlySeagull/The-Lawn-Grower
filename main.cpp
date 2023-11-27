@@ -344,7 +344,7 @@ int main()
     srand(time(NULL));
 
     // Create an image with scale
-    Canvas main_canvas(4000, 4000, 2000);
+    Canvas main_canvas(1000, 1000, 2000);
 
     if (main_canvas.getScale() < 160)
     {
