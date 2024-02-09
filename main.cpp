@@ -429,8 +429,9 @@ int main()
         petal_values petal_3_values = {60 + rand() % 100, 10 + rand() % 40, 10 + rand() % 30, 2 + rand() % 2, 0.5 + (rand() % 100) / 100.0 * 0.5, petal_color_3};
 
         //Run drawPetaledFlower on another thread
-        std::thread t1(drawPetaledFlower, std::ref(main_canvas), pos, petal_1_values, petal_2_values, petal_3_values);
-        t1.detach();
+        /*std::thread t1(drawPetaledFlower, std::ref(main_canvas), pos, petal_1_values, petal_2_values, petal_3_values);
+        t1.detach();*/
+        drawPetaledFlower(main_canvas, pos, petal_1_values, petal_2_values, petal_3_values);
     }
 
     //----------------------------------------------------------------------------------
@@ -450,6 +451,10 @@ int main()
 
     // Export the image
     main_canvas.exportImage("generated_lawn.bmp", 1, 1);
+
+    //Run code to open the image
+    std::string command = "code generated_lawn.bmp";
+    system(command.c_str());
 
     std::cout << "Done" << std::endl;
 
